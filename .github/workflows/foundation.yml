@@ -1,0 +1,51 @@
+name: Mobile foundation
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: '1'
+      EXPO_PUBLIC_APP_ENV: development
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Bootstrap pinned lockfile on foundation branch
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'codex/mobile-v0.1-foundation'
+        run: |
+          npm install --package-lock-only --ignore-scripts
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: lock foundation dependencies on GitHub runner"
+            git push origin HEAD:codex/mobile-v0.1-foundation
+          fi
+      - run: npm ci
+      - name: TypeScript strict check
+        run: npm run typecheck
+      - name: Lint
+        run: npm run lint
+      - name: Foundation safety tests
+        run: npm test
+      - name: Expo configuration and dependency validation
+        run: npm run config:check
+      - name: Android bundle compatibility
+        run: npm run check:android
+      - name: iOS bundle compatibility
+        run: npm run check:ios
+      - name: Native configuration compatibility
+        run: npx expo prebuild --no-install --platform all
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mobile-foundation-bundles
+          path: dist

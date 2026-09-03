@@ -55,3 +55,14 @@ test('timeouts and caller cancellation are distinct', async () => {
   const controller = new AbortController(); controller.abort();
   await assert.rejects(client.get(path, decode, controller.signal), errorCode('cancelled'));
 });
+
+test('decoder failures and credential-provider failures remain safe', async () => {
+  const client = createApiClient({ baseUrl: 'https://example.test', enabled: true,
+    getToken: async () => 'test', transport: async () => new Response('{}') });
+  await assert.rejects(client.get(path, () => { throw new Error('schema detail'); }), errorCode('invalid-response'));
+  const badToken = createApiClient({ baseUrl: 'https://example.test', enabled: true,
+    getToken: async () => { throw new Error('storage detail'); } });
+  await assert.rejects(badToken.get(path, decode), errorCode('unauthenticated'));
+  const badBase = createApiClient({ baseUrl: 'not a url', enabled: true, getToken: async () => 'test' });
+  await assert.rejects(badBase.get(path, decode), errorCode('invalid-path'));
+});

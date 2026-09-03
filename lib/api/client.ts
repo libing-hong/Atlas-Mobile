@@ -17,15 +17,23 @@ export function createApiClient(options: ClientOptions) {
   return {
     async get<T>(path: string, decode: (body: unknown) => T, signal?: AbortSignal): Promise<T> {
       if (!options.enabled) throw new ApiError('disabled', 'Mobile services are not connected.');
-      const base = new URL(options.baseUrl);
-      const url = new URL(path, base);
+      let base: URL;
+      let url: URL;
+      try {
+        base = new URL(options.baseUrl);
+        url = new URL(path, base);
+      } catch {
+        throw new ApiError('invalid-path', 'Unsupported API path.');
+      }
       if (base.protocol !== 'https:' || base.username || base.password ||
           url.origin !== base.origin || !/^\/api\/mobile\/v1\/[a-z0-9/-]+$/.test(url.pathname) ||
           !path.startsWith('/api/mobile/v1/') || path.includes('..') || path.includes('\\')) {
         throw new ApiError('invalid-path', 'Unsupported API path.');
       }
       if (signal?.aborted) throw new ApiError('cancelled', 'Request cancelled.');
-      const token = await options.getToken();
+      let token: string | null;
+      try { token = await options.getToken(); }
+      catch { throw new ApiError('unauthenticated', 'Unable to restore your session.'); }
       if (!token) throw new ApiError('unauthenticated', 'Sign in to continue.');
       const controller = new AbortController();
       let timedOut = false;

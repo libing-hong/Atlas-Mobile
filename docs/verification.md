@@ -26,3 +26,7 @@ Not executed by the foundation export checks:
 - Build native binaries with the required platform toolchains, then perform device acceptance and signing separately.
 
 No live authentication, device, signed build or production verification is claimed.
+
+## Dependency advisory note
+
+The GitHub runner's npm install/ci output reported 13 moderate-severity audit findings for this lockfile. The requested type, lint, configuration and bundle gates are not a full dependency security audit. Advisory applicability and compatible remediation must be reviewed before distributing a connected app; no force-upgrade or audit suppression was applied to obtain a passing build.

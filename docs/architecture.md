@@ -62,3 +62,7 @@ Before integration, Core owners must confirm the contracts, non-production ident
 - [Expo protected routes](https://docs.expo.dev/router/advanced/protected/)
 - [Supabase React Native authentication](https://supabase.com/docs/guides/auth/quickstarts/react-native)
 - [Expo SecureStore](https://docs.expo.dev/versions/latest/sdk/securestore/)
+
+## Native identifiers
+
+Development and preview use separate identifiers: com.libinghong.atlasmobile.development and com.libinghong.atlasmobile.preview. These are development configuration values, not registered App Store or Play Store records. Review identifiers and signing before distribution.

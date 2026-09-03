@@ -17,6 +17,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Generate lockfile for review
+        run: |
+          npm install --package-lock-only --ignore-scripts
+          node -e "const s=require('fs').readFileSync('package-lock.json').toString('base64'); for(let i=0;i<s.length;i+=12000) console.log('LOCK_PART='+s.slice(i,i+12000));"
       - run: npm ci
       - name: TypeScript strict check
         run: npm run typecheck

@@ -1,3 +1,4 @@
+import 'tsx/cjs';
 import type { ExpoConfig } from 'expo/config';
 import { readConfig } from './lib/config/schema';
 

@@ -4,7 +4,7 @@ export default function HomeScreen() {
   return <Screen title="Your next step" subtitle="One thing at a time.">
     <CurrentMatterShell />
     <Heading>Next</Heading><Body>Upcoming steps will follow your current matter.</Body>
-    <Heading>Progress</Heading><Body>Your journey is not connected yet.</Body>
+    <Heading>Progress</Heading><Body>Your latest Atlas journey is loaded from Student Preview.</Body>
     <Heading>Notifications</Heading><Body>Notifications are not available in this preview.</Body>
   </Screen>;
 }

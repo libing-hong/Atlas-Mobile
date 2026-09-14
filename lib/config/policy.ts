@@ -1,7 +1,11 @@
-// Reviewed, exact non-production origins only. Empty until Atlas Core confirms targets.
-// Environment variables alone cannot approve a server or enable business integration.
+// Reviewed, exact non-production origins only.
 export const approvedNonProductionTargets: readonly {
   environment: 'development' | 'preview';
   supabaseOrigin: string;
-}[] = [];
-export const mobileBusinessApiEnabled = false;
+  apiOrigin: string;
+}[] = [{
+  environment: 'preview',
+  supabaseOrigin: 'https://efvpndayardwjqtwtdmx.supabase.co',
+  apiOrigin: 'https://atlas-os-preview-git-integration-m-1b658c-libing-hongs-projects.vercel.app',
+}];
+export const mobileBusinessApiEnabled = true;

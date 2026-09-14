@@ -5,5 +5,5 @@ export type RemoteState<T> =
   | { status: 'error'; message: string }
   | { status: 'ready'; data: T };
 
-// Business response shapes stay unknown until Atlas Core approves contracts.
+// Every business response remains unknown until an endpoint-specific decoder validates it.
 export type UnconfirmedMobileResponse = unknown;

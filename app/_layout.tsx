@@ -25,6 +25,7 @@ function Routes() {
   const canViewShell = status === 'foundation' || status === 'signed-in';
   return <Stack screenOptions={{ headerShown: false }}>
     <Stack.Protected guard={canViewShell}><Stack.Screen name="(tabs)" /></Stack.Protected>
+    <Stack.Protected guard={status === 'signed-in'}><Stack.Screen name="profile" /></Stack.Protected>
     <Stack.Protected guard={status !== 'signed-in'}><Stack.Screen name="(auth)" /></Stack.Protected>
     <Stack.Screen name="privacy" options={{ headerShown: true, title: t('privacy') }} />
     <Stack.Screen name="+not-found" />

@@ -42,6 +42,8 @@ export function RemoteContent<T>({ state, children, retry, emptyMessage }: {
     case 'error': return <>
       <ErrorState message={state.message} retry={!state.recovery || state.recovery === 'retry' ? retry : undefined} />
       {state.recovery === 'account' ? <Button label={t('goAccount')} onPress={() => router.navigate('/(tabs)/account')} /> : null}
+      {state.httpStatus === 409 && state.serverCode === 'PROFILE_REQUIRED' ?
+        <Button label={t('goProfile')} onPress={() => router.push('/profile')} /> : null}
       {state.errorCode ? <ErrorDetails state={state} /> : null}
     </>;
     case 'empty': return <EmptyState message={emptyMessage ?? state.message} />;

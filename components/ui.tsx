@@ -1,11 +1,13 @@
-import type { PropsWithChildren } from 'react';
+import { useEffect, useRef, type PropsWithChildren } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { tokens } from './tokens';
 
-export function Screen({ title, subtitle, children }: PropsWithChildren<{ title: string; subtitle?: string }>) {
+export function Screen({ title, subtitle, children, scrollKey }: PropsWithChildren<{ title: string; subtitle?: string; scrollKey?: number }>) {
+  const scroll = useRef<ScrollView>(null);
+  useEffect(() => { scroll.current?.scrollTo({ y: 0, animated: false }); }, [scrollKey]);
   return <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
-    <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <ScrollView ref={scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
       <Text style={styles.wordmark}>ATLAS</Text>
       <Text accessibilityRole="header" style={styles.title}>{title}</Text>
       {subtitle ? <Text style={styles.body}>{subtitle}</Text> : null}

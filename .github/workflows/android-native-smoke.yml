@@ -1,0 +1,94 @@
+name: Android Native Anonymous Smoke
+
+on:
+  push:
+    branches: [feature/native-team-first-flow-v1]
+    paths:
+      - "app/**"
+      - "assets/**"
+      - "components/**"
+      - "features/**"
+      - "lib/**"
+      - "types/**"
+      - "tests/**"
+      - "app.config.ts"
+      - "package.json"
+      - "package-lock.json"
+      - "scripts/android-native-smoke.py"
+      - ".github/workflows/android-native-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-native-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  anonymous-release-smoke:
+    # Standard public-repository runner only. A visibility or branch change
+    # skips this job; it never falls back to a paid/private/larger runner.
+    if: >-
+      github.repository == 'libing-hong/Atlas-Mobile' &&
+      github.event.repository.visibility == 'public' &&
+      github.ref == 'refs/heads/feature/native-team-first-flow-v1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      CI: "true"
+      EXPO_NO_TELEMETRY: "1"
+      EXPO_PUBLIC_APP_ENV: preview
+      EXPO_PUBLIC_SUPABASE_URL: https://efvpndayardwjqtwtdmx.supabase.co
+      # Existing public project key from android-preview-apk.yml; not a secret.
+      EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_P0c1JB0dFOICwntFalOxOw_wetxrArJ
+      EXPO_PUBLIC_ATLAS_API_URL: https://atlas-os-preview-git-integration-m-1b658c-libing-hongs-projects.vercel.app
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.1
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: node --import tsx --test tests/*.test.ts
+      - run: npx expo prebuild --no-install --platform android
+      - name: Build bundled release for the x86_64 emulator
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon --max-workers=2 -PreactNativeArchitectures=x86_64
+      # Upstream android-emulator-runner documented KVM setup on Ubuntu.
+      - name: Enable emulator hardware acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          test -r /dev/kvm
+          test -w /dev/kvm
+      - name: Install and test anonymous Chinese screens without Metro
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          cores: 2
+          ram-size: 2048M
+          emulator-boot-timeout: 300
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          script: python3 scripts/android-native-smoke.py --apk android/app/build/outputs/apk/release/app-release.apk --output artifacts/android-smoke
+      - name: Retain smoke evidence briefly, without distributing an APK
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-native-smoke-${{ github.sha }}
+          path: artifacts/android-smoke/
+          if-no-files-found: warn
+          retention-days: 1

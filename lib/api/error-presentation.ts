@@ -23,7 +23,7 @@ const messages = {
     invalidResponse: '测试服务返回的数据与当前 App 不兼容，请反馈给开发团队核对版本。当前无法确认你的进度。',
     invalidPath: '此功能的服务地址配置有误，请反馈给开发团队。无需修改你的手机设置。',
     unknown: '暂时无法获取信息，当前无法确认你的进度。请重试；若持续失败，请反馈给开发团队。',
-    profileRequired: '此测试账号需要先建立留学档案，但当前 App 尚未提供建档流程，因此暂时无法继续。这不是密码或网络问题。',
+    profileRequired: '请先完善留学档案，Atlas 才能根据你的情况安排下一步。',
   },
   en: {
     disabled: 'Mobile preview services are not connected, so your information cannot be loaded. Please wait for the development team to complete setup.',
@@ -38,7 +38,7 @@ const messages = {
     invalidResponse: 'The preview service response is not compatible with this app. Ask the development team to check the versions. Your progress cannot currently be confirmed.',
     invalidPath: 'This feature has an invalid service address. Please report it to the development team. You do not need to change your phone settings.',
     unknown: 'Unable to load this information, so your progress cannot be confirmed. Try again and report it if this continues.',
-    profileRequired: 'This test account needs a study profile, but the app does not yet provide a profile creation flow. You cannot continue here yet. This is not a password or network issue.',
+    profileRequired: 'Complete your study profile so Atlas can organise your next step.',
   },
 } as const;
 

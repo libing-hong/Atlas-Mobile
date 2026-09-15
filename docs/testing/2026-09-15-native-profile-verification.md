@@ -76,15 +76,25 @@ Six local Python regression checks passed for stale/history flags, malformed/amb
 
 Source references: [IMMS dump boundaries](https://github.com/aosp-mirror/platform_frameworks_base/blob/android-15.0.0_r1/services/core/java/com/android/server/inputmethod/InputMethodManagerService.java#L6085), [live visibility field](https://github.com/aosp-mirror/platform_frameworks_base/blob/android-15.0.0_r1/services/core/java/com/android/server/inputmethod/ImeVisibilityStateComputer.java#L606), [IME hide behavior](https://github.com/aosp-mirror/platform_frameworks_base/blob/android-15.0.0_r1/core/java/android/inputmethodservice/InputMethodService.java#L3269).
 
+## Authenticated native profile acceptance — PASS
+
+Run [35025648608](https://github.com/libing-hong/Atlas-Mobile/actions/runs/35025648608), job `104571902678`, source `f99fe12ed701648cd19f7dc2ec19fb2df0333790`: **17/17 original acceptance checks PASS** on the Android API 35 x86_64 emulator. The normal Android UI sequence ran from 21:40:26 to 21:48:52 UTC (506 seconds). Both the coordinator and independent logic tester parsed and checked the fixed-field result.
+
+The signed bundled APK installed and launched, the designated account logged in, account identity and the synthetic fixture matched, the native profile loaded and saved GPA 85→84, Home displayed current-matter data after save, and a cold restart read back the saved value. Invalid graduation year 1900 was rejected and did not persist. The test restored GPA 85 and the original graduation-year state, signed out and back in, read the restored profile again, performed final sign-out and removed the emulator's App session. No manual or privileged data restoration was needed.
+
+APK SHA-256: `45f4f9ffe0e96f62f9465871f5316608620adcdc5911dac2180c39c6d5638477`. Machine-readable allowlisted evidence: `2026-09-15-authenticated-profile-pass.json`. No APK, credential, authenticated screenshot, raw UI hierarchy or account log is distributed with this report. The native application source is unchanged from the previously accepted anonymous launch; the later changes repair the separate automation and record evidence.
+
+This accepts the native profile story against the dedicated backend Preview of source `cb85fcbcaeef3c9cce35c00e0044239ff5019ac1`. It does not accept all Web features or prove ARM installation. The Home check establishes ready current-matter display after saving, not an independently observed request revision or changed next action. The final result explicitly leaves cross-user isolation, registration-email delivery, recommendations, full documents/applications/journey and physical ARM-device checks NOT_RUN.
+
 ## Phone APK candidate configuration
 
 The phone APK workflow still referenced the previous integration API while the new profile tests use the dedicated profile branch. The candidate workflow is corrected to the new exact API origin and restricted to manual runs on this feature branch in the public repository. No phone APK build or upload was invoked. Its artifact-upload step remains, so a future manual run is an internal candidate build, not a private distribution mechanism or automatic approval.
 
-Before handing over a phone APK, separately verify the accepted source revision, ARM libraries, package/version metadata, embedded bundle and signature. The version is still 0.1.0 without an explicit Android versionCode; the old/new signing certificates have not been compared, so an in-place upgrade is not promised. Full business parity remains unfinished.
+Before handing over a phone APK, separately verify the accepted source revision, ARM libraries, package/version metadata, embedded bundle and signature. The source version is still 0.1.0 without an explicit Android versionCode. Two retained older APKs were independently verified with official Android tools: both use the same package, versionCode 1 and signing certificate; see `2026-09-15-previous-apk-identity.md`. The installed phone package and the next final candidate have not been compared, so an in-place upgrade is not promised. Full business parity remains unfinished.
 
 ## Unpassed gates
 
-Authenticated native GET/PUT, save/reopen persistence, token expiry and account switching on device, cross-user isolation, ARM phone installation, and the full application/material/visa/journey story remain unaccepted. Synthetic transport tests, anonymous emulator launch and authenticated Web autosave do not stand in for these checks. Pending profile facts are read-only, and other unfinished native actions remain explicitly unavailable.
+Profile authenticated GET/PUT, save/reopen persistence and sign-out/sign-in readback are accepted by the real native run above. Forced token expiry, switching between distinct accounts, cross-user isolation, registration-email delivery, ARM phone installation, and the full school/application/material/visa/journey story remain unaccepted. The accepted profile story does not stand in for these checks. Pending profile facts are read-only, and other unfinished native actions remain explicitly unavailable.
 
 The final source-based UX inventory confirms that these are also implementation gaps, not merely tests waiting to run:
 

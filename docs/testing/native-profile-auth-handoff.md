@@ -28,3 +28,7 @@ The script normally signs in, opens the native study profile, and first verifies
 Only constant check names, source revision, APK hash and sanitized failure categories may leave the runner. Do not persist or upload authenticated screenshots, XML, raw logcat, account data or credentials. The workflow must not register another account, send mail, call recommendation generation, use privileged credentials, fabricate sessions or mutate another user's records.
 
 Cross-user isolation and the full recommendation/application/material/visa/journey flow remain separate unpassed gates. Passing this script establishes only the stated single-account profile story.
+
+## Current result
+
+The authorized configuration and native profile acceptance are complete for this iteration. Run [35025648608](https://github.com/libing-hong/Atlas-Mobile/actions/runs/35025648608), source `f99fe12ed701648cd19f7dc2ec19fb2df0333790`, passed all 17 original checks. GPA was restored and checked after signing in again; final sign-out and emulator-session cleanup passed. No further credential entry, new registration or corrective data restoration is required for this completed run. The remaining product and phone-delivery gates are recorded in `2026-09-15-native-profile-verification.md`.

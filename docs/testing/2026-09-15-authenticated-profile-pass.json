@@ -1,0 +1,108 @@
+{
+  "date": "2026-09-15",
+  "repository": "libing-hong/Atlas-Mobile",
+  "branch": "feature/native-team-first-flow-v1",
+  "runId": 35025648608,
+  "jobId": 104571902678,
+  "runUrl": "https://github.com/libing-hong/Atlas-Mobile/actions/runs/35025648608",
+  "device": "Android API 35 x86_64 emulator",
+  "apkSha256": "45f4f9ffe0e96f62f9465871f5316608620adcdc5911dac2180c39c6d5638477",
+  "checks": [
+    {
+      "check": "credentials_preflight",
+      "status": "PASS"
+    },
+    {
+      "check": "release_package",
+      "status": "PASS"
+    },
+    {
+      "check": "android_login",
+      "status": "PASS"
+    },
+    {
+      "check": "account_identity",
+      "status": "PASS"
+    },
+    {
+      "check": "synthetic_fixture",
+      "status": "PASS"
+    },
+    {
+      "check": "profile_read",
+      "status": "PASS"
+    },
+    {
+      "check": "profile_save",
+      "status": "PASS"
+    },
+    {
+      "check": "home_refresh",
+      "status": "PASS"
+    },
+    {
+      "check": "cold_restart_readback",
+      "status": "PASS"
+    },
+    {
+      "check": "invalid_year_rejected",
+      "status": "PASS"
+    },
+    {
+      "check": "invalid_year_not_persisted",
+      "status": "PASS"
+    },
+    {
+      "check": "original_gpa_restored",
+      "status": "PASS"
+    },
+    {
+      "check": "sign_out",
+      "status": "PASS"
+    },
+    {
+      "check": "sign_in_again",
+      "status": "PASS"
+    },
+    {
+      "check": "restored_profile_readback",
+      "status": "PASS"
+    },
+    {
+      "check": "final_sign_out",
+      "status": "PASS"
+    },
+    {
+      "check": "emulator_session_removed",
+      "status": "PASS"
+    },
+    {
+      "check": "cross_user_isolation",
+      "status": "NOT_RUN"
+    },
+    {
+      "check": "registration_email",
+      "status": "NOT_RUN"
+    },
+    {
+      "check": "recommendations",
+      "status": "NOT_RUN"
+    },
+    {
+      "check": "documents_applications_journey_full_business",
+      "status": "NOT_RUN"
+    },
+    {
+      "check": "physical_arm_device",
+      "status": "NOT_RUN"
+    }
+  ],
+  "sourceSha": "f99fe12ed701648cd19f7dc2ec19fb2df0333790",
+  "status": "PASS",
+  "limits": [
+    "Profile story only; not full Web parity",
+    "Home readiness after save does not independently prove a new request revision",
+    "Not ARM phone installation or upgrade evidence",
+    "No authenticated screenshots, UI XML, raw account logs, or APK distributed"
+  ]
+}

@@ -162,3 +162,44 @@ source change requires rerunning the affected tests and the final gate.
 
 Overall baseline verdict: **NOT READY**. None of these records is evidence that
 Hosted E2E, real-user testing, or Android device acceptance has passed.
+
+## Auth follow-up verification — 2026-09-15
+
+Independent tester: `logic_tester`. This follow-up starts from Mobile commit
+`a2a20f549262ee5cda408e2167012b0ff7d7824d` and the uncommitted reviewed auth patch
+on `feature/native-team-first-flow-v1`. The registration password reference is
+Atlas-OS `src/features/auth/schema.ts` at immutable Web commit
+`8c2c164bf256295577ed1cea2879d801d13dd879`: inclusive 10–128 characters. This
+checks that password rule only, not full registration or production Web parity.
+The earlier baseline and `candidate-sha256.txt` remain historical records;
+that manifest does not identify this follow-up patch.
+
+Added 14 offline tests in `auth-errors.test.ts` and
+`auth-password-policy.test.ts`. They cover password boundaries without trimming,
+safe Chinese/English auth failures, explicit-code precedence, unconfirmed email,
+rate limits, and unknown/account-existence fallbacks without raw detail exposure.
+An installed-SDK edge was identified during independent review: the retryable
+fetch error also represents HTTP 5xx infrastructure failures. Tests verify that
+only status 0 is classified as a transport failure; a 503 does not blame the
+user's connection or password. No auth client or live network call was created.
+
+| Check | Result | Evidence scope |
+|---|---|---|
+| `node --import tsx --test tests/*.test.ts` | **PASS: 68/68**, no fail/skip/todo | 54 existing plus 14 new offline tests on frozen implementation |
+| `npm run typecheck` | **PASS** | TypeScript checking |
+| `npm run lint` | **PASS** | ESLint, zero warnings |
+| `git diff --check` | **PASS** | Reviewed patch formatting |
+| `node --import tsx --test tests/auth-errors.test.ts` | **PASS: 10/10** | Rerun after the final copy-only removal of an unsupported fixed rate-limit wait time |
+
+`npm test` could not start because this runtime refused the `tsx` CLI IPC socket
+with `EPERM`; the Node import command above executed the complete suite without
+that CLI socket. This is a test-runner environment limitation, not a skipped
+test or a claimed successful `npm test` invocation.
+
+Static integration review confirms that the new password policy applies only to
+registration, existing-account sign-in remains exempt, and the synchronous
+submission lock plus pending mode/language locks are retained. These are source
+observations, not native interaction results. This follow-up did not run Hosted
+signup, mail delivery/confirmation, authenticated API access, Android rendering,
+device installation, or full journey tests. Their gates remain unpassed; the
+overall verdict is still **NOT READY**.

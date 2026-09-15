@@ -118,13 +118,13 @@ jobs:
           PY
       - name: Preflight emulator boot before building without credentials
         id: emulator-preflight
-        run: python3 scripts/android-start-emulator.py --preflight
+        run: python3 scripts/android-start-emulator.py --preflight --expected-branch refs/heads/feature/native-school-applications-v1
       - name: Build bundled release for the x86_64 emulator
         working-directory: android
         run: ./gradlew assembleRelease --no-daemon --max-workers=2 -PreactNativeArchitectures=x86_64
       - name: Start official emulator without credentials or persisted logs
         id: emulator-start
-        run: python3 scripts/android-start-emulator.py
+        run: python3 scripts/android-start-emulator.py --expected-branch refs/heads/feature/native-school-applications-v1
       - name: Read empty school plans through normal Android login
         # These credentials are absent from SDK setup and the emulator process.
         env:

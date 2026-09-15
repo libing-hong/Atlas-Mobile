@@ -18,7 +18,8 @@ Application creation uses a fixed selection DTO and a verified account binding. 
 
 - Mobile: 113/113 Node tests, including 21 independently written mutation/DTO tests, pass.
 - Mobile ESLint and TypeScript pass.
-- Existing Android automation regressions: 6/6 pass; new read-only script syntax and credential boundary reviewed.
+- The local `npm test` CLI encounters the same runtime IPC restriction; all 113 tests pass using `node --import tsx --test tests/*.test.ts`, also passed on the standard GitHub runner.
+- Android automation regressions: 12/12 pass (6 keyboard/button cases plus 6 actual startup-context boundary cases); read-only script syntax and credential boundary reviewed.
 - Backend: 295/295 complete tests pass; lint, TypeScript, UI audit and Next production build pass.
 - The exact backend test:ci command reaches tsx CLI IPC and is blocked by runtime EPERM. The identical test tsconfig and complete original test globs pass via node --import tsx, without skipped tests.
 
@@ -29,6 +30,10 @@ Local controller tests do not prove React lifecycle behavior on Android or live 
 Read-only Student Preview inspection confirmed exactly one designated test account and zero recommendations, discoveries, recommendation runs and applications for that account. No records were seeded, AI invoked or user profile altered during this story.
 
 Actual applications grants are SELECT=true and INSERT/UPDATE/DELETE=false for authenticated. These grants remain intact. The backend uses a narrow server-only capability after JWT ownership/visibility checks. Its configured service JWT must bind to efvpndayardwjqtwtdmx; missing/mismatched keys fail closed. The new branch has eight public Preview-only configuration entries, with both AI flags false, and automatic Git deployment disabled. A dedicated server-secret binding is not yet verified.
+
+Backend Preview deployment `dpl_C78fq37VcKdF3n7n7HPB1S8PqCMj` is READY for the exact backend source above. Anonymous requests to the recommendations, applications and application-detail routes each returned 401 UNAUTHENTICATED. This only verifies their unauthenticated boundary.
+
+The first Android run, [35032265963](https://github.com/libing-hong/Atlas-Mobile/actions/runs/35032265963), source `461b6369479946803e010ebe522c37c88a226c8f`, passed credentials preflight, code checks and SDK setup but stopped at emulator preflight with CONFIG / INVALID_CONTEXT. The shared startup helper still required the previous profile branch. No APK was built and no UI login ran. The follow-up explicitly selects the exact new branch while retaining the old default and refusing unknown branches, injected credentials, wrong refs and private repositories.
 
 ## Acceptance boundary
 

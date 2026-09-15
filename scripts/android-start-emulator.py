@@ -14,6 +14,7 @@ import time
 
 REPOSITORY = "libing-hong/Atlas-Mobile"
 BRANCH = "refs/heads/feature/native-team-first-flow-v1"
+SCHOOL_READ_BRANCH = "refs/heads/feature/native-school-applications-v1"
 AVD = "atlas_profile_acceptance"
 SERIAL = "emulator-5554"
 SECRET_NAMES = ("ATLAS_PREVIEW_TEST_EMAIL", "ATLAS_PREVIEW_TEST_PASSWORD")
@@ -44,10 +45,11 @@ def child_environment():
     return {key: value for key, value in os.environ.items() if key not in SECRET_NAMES}
 
 
-def check_context():
+def check_context(expected_branch=BRANCH):
     if (sys.platform != "linux" or os.environ.get("GITHUB_ACTIONS") != "true"
             or os.environ.get("GITHUB_REPOSITORY") != REPOSITORY
-            or os.environ.get("GITHUB_REF") != BRANCH
+            or expected_branch not in (BRANCH, SCHOOL_READ_BRANCH)
+            or os.environ.get("GITHUB_REF") != expected_branch
             or any(os.environ.get(name) for name in SECRET_NAMES)):
         raise StartFailure("INVALID_CONTEXT")
     try:
@@ -92,6 +94,7 @@ def interrupted(_signum, _frame):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--preflight", action="store_true")
+    parser.add_argument("--expected-branch", choices=(BRANCH, SCHOOL_READ_BRANCH), default=BRANCH)
     args = parser.parse_args()
     started = time.monotonic()
     phase = "CONFIG"
@@ -119,7 +122,7 @@ def main():
             reader_failed.set()
 
     try:
-        check_context()
+        check_context(args.expected_branch)
         sdk_text = os.environ.get("ANDROID_HOME", "")
         temp_text = os.environ.get("RUNNER_TEMP", "")
         if not Path(sdk_text).is_absolute() or not Path(temp_text).is_absolute():

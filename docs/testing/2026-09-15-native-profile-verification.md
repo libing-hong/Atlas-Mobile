@@ -50,6 +50,12 @@ The source review also clarified that the `home_refresh` assertion only proves t
 
 The reviewed follow-up moves a credential-free emulator boot preflight before Gradle, terminates that preflight process before compilation, and starts a fresh emulator after the build. Only the preflight captures startup output, drains it continuously and retains at most 256 KiB in memory; it reports fixed error categories rather than raw logs. Normal startup uses DEVNULL. The actual App script and acceptance assertions are unchanged. The local execution environment became unavailable, so no new local syntax result is claimed; the hosted workflow includes Python compilation before SDK setup.
 
+## Emulator registry diagnosis
+
+Run `35007978918`, job `104512448528`, source `eeaa4a4ca1088bb2db62333c359a15147f875fe8`, passed credential preflight, KVM, 92 logic tests, typecheck, lint, prebuild and Python syntax validation. The new emulator preflight stopped after 2.9 seconds with `AVD_NOT_FOUND`, natural emulator exit code 1 and confirmed cleanup. Gradle and all actual App steps were skipped; no profile values were changed.
+
+The follow-up gives avdmanager and both emulator launches the same explicit Android user, emulator and AVD registry directories. It also requires the fixed AVD's registry pointer and `emulator -list-avds` visibility to agree before trying to boot. This is an environment repair; App code, credentials handling and all authenticated acceptance assertions remain unchanged. Its result must be recorded from the next hosted run, not inferred from source review.
+
 ## Phone APK candidate configuration
 
 The phone APK workflow still referenced the previous integration API while the new profile tests use the dedicated profile branch. The candidate workflow is corrected to the new exact API origin and restricted to manual runs on this feature branch in the public repository. No phone APK build or upload was invoked. Its artifact-upload step remains, so a future manual run is an internal candidate build, not a private distribution mechanism or automatic approval.

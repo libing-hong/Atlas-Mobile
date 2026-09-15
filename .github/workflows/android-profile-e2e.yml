@@ -83,8 +83,35 @@ jobs:
         run: python3 -m py_compile scripts/android-start-emulator.py scripts/android-profile-e2e.py
       - name: Prepare official Android SDK and fixed AVD without credentials
         run: |
+          # Use one explicit registry for avdmanager and both emulator launches.
+          export ANDROID_USER_HOME="$RUNNER_TEMP/atlas-android-user"
+          export ANDROID_EMULATOR_HOME="$ANDROID_USER_HOME"
+          export ANDROID_AVD_HOME="$ANDROID_USER_HOME/avd"
+          mkdir -p "$ANDROID_AVD_HOME"
+          printf 'ANDROID_USER_HOME=%s\nANDROID_EMULATOR_HOME=%s\nANDROID_AVD_HOME=%s\n' "$ANDROID_USER_HOME" "$ANDROID_EMULATOR_HOME" "$ANDROID_AVD_HOME" >> "$GITHUB_ENV"
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install 'platform-tools' 'emulator' 'system-images;android-35;google_apis;x86_64' >/dev/null
           printf 'no\n' | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --force --name atlas_profile_acceptance --package 'system-images;android-35;google_apis;x86_64' --device pixel_6 --path "$RUNNER_TEMP/atlas-profile-avd" >/dev/null
+          python3 - <<'PY'
+          import os, subprocess, sys
+          from pathlib import Path
+          try:
+              registry = Path(os.environ['ANDROID_AVD_HOME']) / 'atlas_profile_acceptance.ini'
+              entries = [line.split('=', 1) for line in registry.read_text().splitlines() if '=' in line]
+              if sum(key == 'path' for key, _ in entries) != 1:
+                  raise RuntimeError()
+              values = dict(entries)
+              expected = Path(os.environ['RUNNER_TEMP']) / 'atlas-profile-avd'
+              if Path(values.get('path', '')).resolve() != expected.resolve() or not (expected / 'config.ini').is_file():
+                  raise RuntimeError()
+              result = subprocess.run([str(Path(os.environ['ANDROID_HOME']) / 'emulator' / 'emulator'), '-list-avds'],
+                                      capture_output=True, timeout=15, check=False)
+              if result.returncode != 0 or b'atlas_profile_acceptance' not in result.stdout.splitlines():
+                  raise RuntimeError()
+          except Exception:
+              print('BLOCKED AVD_REGISTRY_MISMATCH')
+              sys.exit(2)
+          print('PASS AVD_REGISTERED')
+          PY
       - name: Preflight emulator boot before building without credentials
         id: emulator-preflight
         run: python3 scripts/android-start-emulator.py --preflight

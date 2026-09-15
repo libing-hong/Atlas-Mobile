@@ -4,6 +4,16 @@ on:
   push:
     branches: [feature/native-school-applications-v1]
     paths:
+      - app/**
+      - components/**
+      - features/**
+      - lib/**
+      - types/**
+      - tests/**
+      - package.json
+      - package-lock.json
+      - app.config.ts
+      - tsconfig.json
       - scripts/android-school-read-e2e.py
       - scripts/android-profile-e2e.py
       - scripts/android-start-emulator.py
@@ -80,6 +90,8 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: node --import tsx --test tests/*.test.ts
+      - name: Validate Expo dependencies before building
+        run: npm run config:check
       - run: npx expo prebuild --no-install --platform android
       - name: Check Python syntax before emulator setup
         run: python3 -m py_compile scripts/android-start-emulator.py scripts/android-profile-e2e.py scripts/android-school-read-e2e.py

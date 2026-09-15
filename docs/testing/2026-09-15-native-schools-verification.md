@@ -35,6 +35,10 @@ Backend Preview deployment `dpl_C78fq37VcKdF3n7n7HPB1S8PqCMj` is READY for the e
 
 The first Android run, [35032265963](https://github.com/libing-hong/Atlas-Mobile/actions/runs/35032265963), source `461b6369479946803e010ebe522c37c88a226c8f`, passed credentials preflight, code checks and SDK setup but stopped at emulator preflight with CONFIG / INVALID_CONTEXT. The shared startup helper still required the previous profile branch. No APK was built and no UI login ran. The follow-up explicitly selects the exact new branch while retaining the old default and refusing unknown branches, injected credentials, wrong refs and private repositories.
 
+Run [35032689657](https://github.com/libing-hong/Atlas-Mobile/actions/runs/35032689657), source `664ca082580b6b442beb85611c8d636724911116`, passed emulator preflight and reached the native build. It was deliberately cancelled before UI acceptance when the companion foundation run found that Expo's current compatibility metadata requires patch 57.0.23 instead of pinned 57.0.22. The dependency gate is preserved and now also runs before the Android build. App source and dependency changes trigger fresh Android acceptance; documentation-only changes do not. This cancelled run is not a PASS.
+
+The patch correction updates only Expo 57.0.23 and its required CLI 57.0.25, router-server 57.0.10 and babel-preset-expo 57.0.12 lock entries. React Native, React and unrelated dependencies remain pinned. The new candidate needs its own CI and Android result; earlier dependency checks do not substitute for that result.
+
 ## Acceptance boundary
 
 The new Android script tests normal UI login, account identity, Chinese/English empty application and school-plan states, return navigation, cold restart, final sign-out and emulator-session removal. It does not seed data or write business records. Only allowlisted result JSON is persisted; no authenticated screenshots, UI XML, credentials or raw logs are published.

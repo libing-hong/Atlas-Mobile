@@ -57,7 +57,10 @@ FAILURES = frozenset((
 REASONS = frozenset(("NONE", "EXECUTABLE_MISSING", "PERMISSION_DENIED",
                      "TIMEOUT", "NONZERO_EXIT", "SPAWN_FAILED"))
 PHASES = frozenset(("INIT", "DEVICE_IDENTITY", "REVERSE_CHECK", "INSTALL",
-                    "CLEAR", "DISPLAY_SETUP", "LAUNCH", "APP_FLOW"))
+                    "CLEAR", "DISPLAY_SETUP", "LAUNCH", "APP_FLOW",
+                    "LOGIN_FORM", "LOGIN_EMAIL", "LOGIN_PASSWORD", "LOGIN_SUBMIT",
+                    "LOGIN_WAIT", "ACCOUNT_READ", "PROFILE_LOAD", "FIXTURE_READ",
+                    "PROFILE_SAVE", "HOME_READ", "LOGOUT"))
 
 
 class Failure(Exception):
@@ -72,6 +75,22 @@ class Failure(Exception):
 def require(condition, code, blocked=False):
     if not condition:
         raise Failure(code, blocked)
+
+
+def current_ime_shown(state):
+    # API 35 IMMS live state only. InputMethodService's mIsInputViewShown can
+    # stay true after hiding, and history is not the current visibility state.
+    # AOSP android-15.0.0_r1: InputMethodManagerService.dump and
+    # ImeVisibilityStateComputer.dump (mInputShown).
+    headers = list(re.finditer(rb"(?m)^Current Input Method Manager state:\r?$", state))
+    require(len(headers) == 1, "KEYBOARD_STATE_UNKNOWN")
+    rest = state[headers[0].end():]
+    history = re.search(rb"(?m)^  mStartInputHistory:\r?$", rest)
+    require(history is not None, "KEYBOARD_STATE_UNKNOWN")
+    live = rest[:history.start()]
+    values = re.findall(rb"(?m)^  mInputShown=(true|false)\r?$", live)
+    require(len(values) == 1, "KEYBOARD_STATE_UNKNOWN")
+    return values[0] == b"true"
 
 
 def clean_environment():
@@ -250,8 +269,9 @@ class Android:
         left, top, right, bottom = map(int, match.groups())
         return (left, top, right, bottom) if right > left and bottom > top else None
 
-    def find(self, tree, label, field=False, tab=False):
+    def find(self, tree, label, field=False, tab=False, actionable=False):
         matches = []
+        parents = {child: parent for parent in tree.iter() for child in parent} if actionable else {}
         for node in tree.iter("node"):
             if node.get("package") != PACKAGE or not self.bounds(node):
                 continue
@@ -260,6 +280,14 @@ class Android:
                 valid = desc == label and node.get("class", "").endswith("EditText")
             else:
                 valid = text == label or desc == label
+            if valid and actionable:
+                # A button's text child can be enabled while its parent is not.
+                # Tap and validate the actual interactive ancestor, not that child.
+                while node is not None and node.get("package") == PACKAGE:
+                    if node.get("clickable") == "true" or node.get("class", "").endswith("Button"):
+                        break
+                    node = parents.get(node)
+                valid = node is not None and node.get("package") == PACKAGE and self.bounds(node)
             if valid and (not tab or self.bounds(node)[1] >= 1950):
                 matches.append(node)
         return max(matches, key=lambda node: self.bounds(node)[1]) if matches else None
@@ -274,24 +302,30 @@ class Android:
         raise Failure(code)
 
     def hide_keyboard(self):
-        state = self.shell("dumpsys", "input_method")
-        shown = re.search(rb"(?:mInputShown|mIsInputViewShown)\s*=\s*true", state)
-        known = re.search(rb"(?:mInputShown|mIsInputViewShown)\s*=\s*(true|false)", state)
-        require(known is not None, "KEYBOARD_STATE_UNKNOWN")
-        if shown:
-            self.shell("input", "keyevent", "KEYCODE_BACK")
-            time.sleep(0.2)
+        if not current_ime_shown(self.shell("dumpsys", "input_method")):
+            return
+        self.shell("input", "keyevent", "KEYCODE_BACK")
+        deadline = time.monotonic() + 5
+        while True:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                break
+            if not current_ime_shown(self.shell("dumpsys", "input_method", timeout=remaining)):
+                return
+            time.sleep(min(0.2, max(0, deadline - time.monotonic())))
+        # Never send another BACK to a page whose keyboard status is uncertain.
+        raise Failure("KEYBOARD_STATE_UNKNOWN")
 
     def swipe(self, down=False):
         self.hide_keyboard()
         self.shell("input", "swipe", "970", "650" if down else "1850",
                    "970", "1850" if down else "650", "250")
 
-    def locate(self, label, field=False, tab=False):
+    def locate(self, label, field=False, tab=False, actionable=False):
         self.hide_keyboard()
         for direction, count in ((False, 1), (True, 6), (False, 10)):
             for _ in range(count):
-                found = self.find(self.tree(), label, field=field, tab=tab)
+                found = self.find(self.tree(), label, field=field, tab=tab, actionable=actionable)
                 if found is not None:
                     return found
                 if tab:
@@ -306,7 +340,7 @@ class Android:
         time.sleep(0.2)
 
     def tap(self, label, tab=False):
-        self.tap_node(self.locate(label, tab=tab))
+        self.tap_node(self.locate(label, tab=tab, actionable=True))
 
     def value(self, label):
         return self.locate(label, field=True).get("text", "")
@@ -332,17 +366,25 @@ class Android:
         self.hide_keyboard()
 
     def login(self, email, password):
+        self.phase = "LOGIN_FORM"
         self.wait("欢迎使用 Atlas", "LOGIN_NOT_CONFIRMED")
+        self.phase = "LOGIN_EMAIL"
         self.fill("邮箱", email)
+        self.phase = "LOGIN_PASSWORD"
         self.fill("密码", password, secure=True)
+        self.phase = "LOGIN_SUBMIT"
         self.tap("登录")
+        self.phase = "LOGIN_WAIT"
         self.wait("你的下一步", "LOGIN_NOT_CONFIRMED", timeout=75)
+        self.phase = "APP_FLOW"
 
     def home(self):
+        self.phase = "HOME_READ"
         self.wait("你的下一步", "HOME_DATA_NOT_READY")
         self.wait("当前事项", "HOME_DATA_NOT_READY", timeout=75)
 
     def account(self, email):
+        self.phase = "ACCOUNT_READ"
         self.tap("账户", tab=True)
         self.wait("完善留学档案", timeout=60)
         # Compare designated account in memory. Never report the read value.
@@ -350,6 +392,7 @@ class Android:
 
     def profile(self, email):
         self.account(email)
+        self.phase = "PROFILE_LOAD"
         self.tap("完善留学档案")
         self.wait("我的留学档案")
         # A heading alone is not proof that the remote profile loaded.
@@ -357,6 +400,7 @@ class Android:
         self.locate("就读院校", field=True)
 
     def fixture(self, expected_gpa):
+        self.phase = "FIXTURE_READ"
         require(self.value("就读院校") == INSTITUTION
                 and self.value("当前专业") == MAJOR
                 and self.value("GPA / 平均分") == expected_gpa,
@@ -370,12 +414,14 @@ class Android:
         return graduation
 
     def save(self):
+        self.phase = "PROFILE_SAVE"
         self.tap("保存草稿")
         self.wait(SAVED, "SAVE_NOT_CONFIRMED", timeout=75)
         self.wait("查看更新后的下一步", "SAVE_NOT_CONFIRMED")
 
     def logout(self, email):
         self.account(email)
+        self.phase = "LOGOUT"
         self.tap("退出登录")
         self.wait("欢迎使用 Atlas", "LOGOUT_NOT_CONFIRMED", timeout=60)
 

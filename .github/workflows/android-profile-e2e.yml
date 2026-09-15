@@ -6,6 +6,7 @@ on:
     paths:
       - scripts/android-profile-e2e.py
       - scripts/android-start-emulator.py
+      - scripts/tests/android_profile_automation_test.py
       - .github/workflows/android-profile-e2e.yml
   workflow_dispatch:
 
@@ -81,6 +82,8 @@ jobs:
       - run: npx expo prebuild --no-install --platform android
       - name: Check Python syntax before emulator setup
         run: python3 -m py_compile scripts/android-start-emulator.py scripts/android-profile-e2e.py
+      - name: Check keyboard and button automation regressions
+        run: python3 -m unittest discover -s scripts/tests -p 'android_profile_automation_test.py'
       - name: Prepare official Android SDK and fixed AVD without credentials
         run: |
           # Use one explicit registry for avdmanager and both emulator launches.

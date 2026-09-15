@@ -1,6 +1,6 @@
 type JsonObject = Record<string, unknown>;
 
-export type MobileAction = { enabled: boolean; kind: string; resourceId: string | null };
+export type MobileAction = { enabled: boolean; kind: string | null; resourceId: string | null };
 export type MobileMatter = { id: string; title: string; description: string; status: string; dueAt: string | null; action: MobileAction };
 export type CurrentMatters = { currentStage: string; completed: boolean; primary: MobileMatter | null; matters: MobileMatter[] };
 export type MobileApplication = { id: string; schoolName: string; programName: string; status: string; materialsReady: number; materialsTotal: number };
@@ -17,7 +17,13 @@ function nullableString(value: unknown): string | null { return value === null ?
 function boolean(value: unknown): boolean { if (typeof value !== 'boolean') throw new Error('Invalid response boolean.'); return value; }
 function number(value: unknown): number { if (typeof value !== 'number' || !Number.isFinite(value)) throw new Error('Invalid response number.'); return value; }
 function data(value: unknown): JsonObject { return object(object(value).data); }
-function action(value: unknown): MobileAction { const item = object(value); return { enabled: boolean(item.enabled), kind: string(item.kind), resourceId: nullableString(item.resourceId) }; }
+function action(value: unknown): MobileAction {
+  const item = object(value);
+  const enabled = boolean(item.enabled);
+  const kind = nullableString(item.kind);
+  if (enabled && !kind) throw new Error('Enabled actions need a target kind.');
+  return { enabled, kind, resourceId: nullableString(item.resourceId) };
+}
 function matter(value: unknown): MobileMatter { const item = object(value); return { id: string(item.id), title: string(item.title), description: string(item.description), status: string(item.status), dueAt: nullableString(item.dueAt), action: action(item.action) }; }
 function array<T>(value: unknown, decode: (item: unknown) => T): T[] { if (!Array.isArray(value)) throw new Error('Invalid response list.'); return value.map(decode); }
 

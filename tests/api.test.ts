@@ -68,7 +68,7 @@ test('decoder failures and credential-provider failures remain safe', async () =
   await assert.rejects(badBase.get(path, decode), errorCode('invalid-path'));
 });
 test('endpoint decoders accept only the public Mobile V1 envelope shapes used by the UI', () => {
-  const disabled = { enabled: false, kind: 'UNAVAILABLE', resourceId: null };
+  const disabled = { enabled: false, kind: null, resourceId: null };
   const matter = { id: 'm1', title: 'Next step', description: 'Do this next', status: 'ready', dueAt: null, action: disabled };
   assert.equal(decodeCurrentMatters({ data: { currentStage: 'study_profile', completed: false, primary: matter, matters: [matter] } }).primary?.id, 'm1');
   assert.equal(decodeApplications({ data: { items: [{ id: 'a1', schoolName: 'School', programName: 'Programme', status: 'planning', materialsReady: 0, materialsTotal: 2 }] } }).items.length, 1);

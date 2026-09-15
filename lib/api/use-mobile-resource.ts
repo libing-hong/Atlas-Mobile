@@ -2,22 +2,49 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../auth/AuthProvider';
 import type { RemoteState } from '../../types/remote-state';
 import { mobileApi } from './index';
+import { useI18n } from '../i18n/I18nProvider';
+import { createResourceRequest, type ResourceRequestState } from './resource-request';
+import { ApiError } from './client';
+import { presentApiError } from './error-presentation';
 
 export function useMobileResource<T>(path: string, decode: (body: unknown) => T, empty: (data: T) => boolean) {
-  const { session } = useAuth();
+  const { session, status } = useAuth();
+  const { locale, t } = useI18n();
   const [attempt, setAttempt] = useState(0);
-  const [state, setState] = useState<RemoteState<T>>({ status: 'loading' });
+  const userId = session?.user.id;
+  const accessToken = session?.access_token;
+  const [snapshot, setSnapshot] = useState<{
+    userId: typeof userId; accessToken: typeof accessToken;
+    path: string; locale: typeof locale; attempt: number;
+    decode: typeof decode; empty: typeof empty; result: ResourceRequestState<T>;
+  } | null>(null);
   useEffect(() => {
-    const controller = new AbortController();
-    void mobileApi.get(path, decode, controller.signal).then(result => {
-      setState(empty(result) ? { status: 'empty', message: 'Nothing has been added yet.' } : { status: 'ready', data: result });
-    }).catch(error => {
-      if (!controller.signal.aborted) setState({ status: 'error', message: error instanceof Error ? error.message : 'Unable to load this information.' });
+    if (status !== 'signed-in' || !userId || !accessToken) return;
+    const request = createResourceRequest({
+      load: signal => mobileApi.get(path, decode, signal, locale),
+      isEmpty: empty,
+      onState: result => setSnapshot({ userId, accessToken, path, locale, attempt, decode, empty, result }),
     });
-    return () => controller.abort();
-  }, [path, decode, empty, attempt, session?.access_token]);
-  return { state, retry: useCallback(() => {
-    setState({ status: 'loading' });
-    setAttempt(value => value + 1);
-  }, []) };
+    request.start();
+    return request.cancel;
+  }, [status, path, decode, empty, attempt, userId, accessToken, locale]);
+  const retry = useCallback(() => setAttempt(value => value + 1), []);
+  let state: RemoteState<T> = { status: 'loading' };
+  if (status === 'foundation') state = { status: 'unavailable', message: t('serviceNotConnected') };
+  else if (status === 'signed-out' || status === 'error') {
+    const { status: httpStatus, ...presentation } = presentApiError(new ApiError('unauthenticated', ''), locale);
+    state = { status: 'error', ...presentation, ...(httpStatus !== undefined ? { httpStatus } : {}) };
+  } else if (status === 'signed-in' && snapshot && snapshot.userId === userId && snapshot.accessToken === accessToken &&
+    snapshot.path === path && snapshot.locale === locale && snapshot.attempt === attempt &&
+    snapshot.decode === decode && snapshot.empty === empty) {
+    // Hide data immediately during a render for another user, locale, or request;
+    // effect cleanup alone happens too late to provide this guarantee.
+    const result = snapshot.result;
+    if (result.status === 'empty') state = { status: 'empty', message: t('emptyBody') };
+    else if (result.status === 'error') {
+      const { status: httpStatus, ...presentation } = presentApiError(result.error, locale);
+      state = { status: 'error', ...presentation, ...(httpStatus !== undefined ? { httpStatus } : {}) };
+    } else state = result;
+  }
+  return { state, retry };
 }

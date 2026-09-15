@@ -22,6 +22,7 @@ export default function AccountScreen() {
     finally { setBusy(false); }
   }
   return <Screen title={t('accountTitle')} subtitle={t('accountSubtitle')}>
+    <Body>{t('accountReadOnly')}</Body>
     <Panel><Heading>{session?.user.email ?? t('notSignedIn')}</Heading>
       <Body>{status === 'foundation' ? t('previewMode') : t('signedInDevice')}</Body>
       {status === 'foundation' ? <Button label={t('viewSignIn')} onPress={() => router.push('/(auth)/sign-in')} /> : null}

@@ -18,6 +18,8 @@ The backend companion is Atlas-OS draft PR #43, commit `cb85fcbcaeef3c9cce35c00e
 
 The legacy Preview health route returned 500 `preview_catalog_import_failed`. Source inspection found that this GET can import catalog rows before checking counts, so it must not be repeated as a read-only diagnostic. A failure does not establish whether partial import writes occurred. No recommendation generation was called. Both AI generation flags were overridden to false only for the new branch. Profile and current-matters do not depend on this catalog import path; catalog readiness remains a separate unresolved gate.
 
+Deployment `dpl_5Ujk5fX2WLdT91ArC2k5qBS6tyaV` is the latest READY redeployment of the same source with both branch-only AI flags disabled. The health route was not called again. The later backend documentation-only commit is not the deployed application revision.
+
 ## Verification so far
 
 - Independent Mobile logic suite: 92/92 passed, including 24 new request/contract cases.
@@ -28,9 +30,33 @@ The legacy Preview health route returned 500 `preview_catalog_import_failed`. So
 - A free standard public-repository Android CI job is prepared for this exact feature branch. It builds a bundled x86_64 release and checks fresh offline Chinese sign-in, registration-mode navigation and force-stop/reopen. It enters no credentials, submits no registration, uploads no APK and retains only smoke evidence for one day. Actual result must be recorded after execution.
 - First real CI run `34997709876`, source `fe979353ebe14c63c18a76f47da91e0d292c5288`: all 92 tests, typecheck, lint, prebuild and Release assembly passed. Gradle completed in 8m55s. KVM preparation then failed; the emulator step was skipped and no native screen evidence exists for that run. The revised runner checks actual KVM availability before the expensive build, waits for udev rules and retains nonsecret diagnostics. It does not downgrade the requirement or weaken screen assertions.
 - Second run `34999341318`, source `474e65e0f02bfd09b90159012ae9b53a23f74428`: KVM, tests and signed Release assembly passed. On API 35, a Pixel Launcher system ANR covered the already-rendered Chinese Atlas login and registration entrance. The UI dump contained only that system dialog, so the welcome-page assertion correctly failed. APK SHA-256: `40061ddbd31cc70763db02e454f09264261494cac6b5b9ea812e8f8bc89b0630`. No account data was entered; the result remains FAIL. The reviewed fixture repair recognizes only this exact system title/package/button, closes it at most once, preserves its evidence, and still requires every original App assertion. Emulator RAM is 3072M on the same standard runner.
+- Third run `35001877010`, source `0b4f27c15b6c08cc0f8772d099e32ec83f435d2e`: PASS on the real API 35 x86_64 emulator. All six original assertions passed: signed bundled release, offline Chinese cold launch without Metro, registration confirmation and password-policy visibility, return to sign-in, force-stop/reopen and no observed fatal runtime errors. Actual cold-launch and registration screenshots were inspected. The emulator launcher recovery was not used (`emulatorLauncherRecovered: false`). APK SHA-256: `e585ae2b29acd3c89bd2b4950c318ce9546c8f952a94f92db37b7193166932b9`. Artifact `10411130005`, ZIP SHA-256 `458a6202219db23649d3a3a1f3f17caa99498b6afd13e58bf4556c70ff8e2430`, contains screenshots, hierarchies and sanitized smoke evidence, not an APK. No credentials were entered or account created. Later commits add only the separate authenticated test preparation and documentation; the native application source is unchanged.
+
+## Authenticated acceptance handoff
+
+The reviewed workflow and normal-UI Android script are committed as `b6451c361a7ba909a6cd597ecbeda886316f0844`. Credentials are restricted to two direct Python steps and removed from child-process environments. The script checks the synthetic account fixture before changing GPA, restores the original value, and reports any failed restoration explicitly. Authenticated XML stays in memory; screenshots, raw logs and account data are not uploaded. Static Python, YAML and shell checks passed; this is preparation, not proof of real authenticated Android execution.
+
+The first hosted run `35002548097`, job `104494232465`, stopped as intended at `MISSING_TEST_CREDENTIALS` with status `BLOCKED` and exit 2. All application checks were `NOT_RUN`; SDK setup, build and emulator launch were skipped. This verifies only the missing-credential gate.
+
+Automatic review rejected storing the test mailbox in GitHub Actions without explicit consent to that destination and workflow/collaborator access. No credential configuration was completed. See `native-profile-auth-handoff.md` for the two required secret names and the direct-entry process. The user should not repeat registration or send an Atlas password in chat.
 
 ## Unpassed gates
 
-Actual Android release execution, authenticated native GET/PUT, save/reopen persistence, token expiry and account switching on device, cross-user isolation, ARM phone installation, and the full application/material/visa/journey story remain unaccepted. Synthetic transport tests and authenticated Web autosave do not stand in for these checks. Pending profile facts are read-only, and other unfinished native actions remain explicitly unavailable.
+Authenticated native GET/PUT, save/reopen persistence, token expiry and account switching on device, cross-user isolation, ARM phone installation, and the full application/material/visa/journey story remain unaccepted. Synthetic transport tests, anonymous emulator launch and authenticated Web autosave do not stand in for these checks. Pending profile facts are read-only, and other unfinished native actions remain explicitly unavailable.
+
+The final source-based UX inventory confirms that these are also implementation gaps, not merely tests waiting to run:
+
+| User operation | Current source evidence |
+| --- | --- |
+| Generate and inspect school recommendations or add target schools | `features/current-matters/CurrentMatterShell.tsx` connects only `OPEN_PROFILE`; no school-selection route exists. |
+| Create an application, open its details or change its stage | `features/applications/ApplicationsScreen.tsx` displays summaries without these actions. |
+| Upload, capture, download or confirm materials and extracted facts | Application material counts and profile pending facts are display-only. |
+| Offer, visa, departure and arrival task completion | `features/journey/JourneyScreen.tsx` displays stage/status without task actions. |
+| Atlas assistant conversation | `features/atlas/AtlasScreen.tsx` keeps its conversation action disabled. |
+| Resend verification, reset password and verification deep-link recovery | These flows are absent from `features/auth/SignInScreen.tsx` and `lib/auth/AuthProvider.tsx`; URL session detection is disabled. |
+| Export/delete personal data and manage privacy | Account and privacy routes provide explanatory content without these operations. |
+| Notifications and a language preference retained across restarts | Notifications are unavailable and `lib/i18n/I18nProvider.tsx` keeps the language in memory only. |
+
+This iteration is limited to authentication foundations and the first native profile story. Full Web parity requires further implementation and acceptance of the operations above.
 
 No production deployment, main merge, database migration, paid service or paid recommendation request is included in this change.

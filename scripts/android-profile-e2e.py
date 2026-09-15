@@ -54,9 +54,16 @@ FAILURES = frozenset((
     "UNEXPECTED_FAILURE", "KEYBOARD_STATE_UNKNOWN", "SYSTEM_LAUNCHER_ANR",
 ))
 
+REASONS = frozenset(("NONE", "EXECUTABLE_MISSING", "PERMISSION_DENIED",
+                     "TIMEOUT", "NONZERO_EXIT", "SPAWN_FAILED"))
+PHASES = frozenset(("INIT", "DEVICE_IDENTITY", "REVERSE_CHECK", "INSTALL",
+                    "CLEAR", "DISPLAY_SETUP", "LAUNCH", "APP_FLOW"))
+
 
 class Failure(Exception):
-    def __init__(self, code, blocked=False):
+    def __init__(self, code, blocked=False, reason="NONE", return_code=None):
+        self.reason = reason if reason in REASONS else "NONE"
+        self.return_code = return_code if isinstance(return_code, int) and -255 <= return_code <= 255 else None
         self.code = code if code in FAILURES else "UNEXPECTED_FAILURE"
         self.blocked = blocked
         super().__init__(self.code)
@@ -76,9 +83,16 @@ def command(args, code="ADB_OPERATION_FAILED", timeout=35):
     try:
         result = subprocess.run(args, capture_output=True, timeout=timeout,
                                 env=clean_environment(), check=False)
+    except FileNotFoundError:
+        raise Failure(code, reason="EXECUTABLE_MISSING") from None
+    except PermissionError:
+        raise Failure(code, reason="PERMISSION_DENIED") from None
+    except subprocess.TimeoutExpired:
+        raise Failure(code, reason="TIMEOUT") from None
     except Exception:
-        raise Failure(code) from None
-    require(result.returncode == 0, code)
+        raise Failure(code, reason="SPAWN_FAILED") from None
+    if result.returncode != 0:
+        raise Failure(code, reason="NONZERO_EXIT", return_code=result.returncode)
     # No command arguments, output, stderr or exception text reaches reporting.
     return result.stdout
 
@@ -133,7 +147,7 @@ def credentials():
     return email, password
 
 
-def report(status, checks, code=None, source_sha=None, apk_hash=None):
+def report(status, checks, code=None, source_sha=None, apk_hash=None, reason=None, phase=None, return_code=None):
     # Explicit allowlists prevent a future call site from logging UI/user data.
     status = status if status in ("PASS", "FAIL", "BLOCKED", "PREFLIGHT_READY") else "FAIL"
     rows = [{"check": name, "status": "PASS" if name in checks else "NOT_RUN"} for name in CHECKS]
@@ -141,6 +155,12 @@ def report(status, checks, code=None, source_sha=None, apk_hash=None):
     data = {"status": status, "checks": rows}
     if code:
         data["failure"] = code if code in FAILURES else "UNEXPECTED_FAILURE"
+    if reason in REASONS:
+        data["reason"] = reason
+    if phase in PHASES:
+        data["phase"] = phase
+    if isinstance(return_code, int) and -255 <= return_code <= 255:
+        data["commandReturnCode"] = return_code
     if source_sha and re.fullmatch(r"[0-9a-f]{40}", source_sha):
         data["sourceSha"] = source_sha
     if apk_hash and re.fullmatch(r"[0-9a-f]{64}", apk_hash):
@@ -159,9 +179,17 @@ def report(status, checks, code=None, source_sha=None, apk_hash=None):
 
 class Android:
     def __init__(self):
-        port = os.environ.get("EMULATOR_PORT", "5554")
-        require(re.fullmatch(r"[0-9]{4,5}", port) is not None, "ADB_UNAVAILABLE")
-        self.prefix = ["adb", "-s", "emulator-" + port]
+        self.phase = "INIT"
+        require(os.environ.get("EMULATOR_PORT", "5554") == "5554", "ADB_UNAVAILABLE")
+        sdk_text = os.environ.get("ANDROID_HOME", "")
+        require(Path(sdk_text).is_absolute(), "ADB_UNAVAILABLE", True)
+        adb = Path(sdk_text) / "platform-tools" / "adb"
+        if not adb.is_file():
+            raise Failure("ADB_UNAVAILABLE", True, reason="EXECUTABLE_MISSING")
+        if not os.access(adb, os.X_OK):
+            raise Failure("ADB_UNAVAILABLE", True, reason="PERMISSION_DENIED")
+        # Use the same official SDK binary and fixed port as the boot helper.
+        self.prefix = [str(adb), "-s", "emulator-5554"]
         self.installed = False
 
     def adb(self, *args, code="ADB_OPERATION_FAILED", timeout=35):
@@ -171,18 +199,25 @@ class Android:
         return self.adb("shell", *args, **kwargs)
 
     def prepare(self, apk):
+        self.phase = "DEVICE_IDENTITY"
         require(self.shell("getprop", "ro.kernel.qemu").strip() == b"1", "NOT_AN_EMULATOR")
+        self.phase = "REVERSE_CHECK"
         require(not self.adb("reverse", "--list").strip(), "METRO_OR_REVERSE_PRESENT")
         with socket.socket() as probe:
             probe.settimeout(1)
             require(probe.connect_ex(("127.0.0.1", 8081)) != 0, "METRO_OR_REVERSE_PRESENT")
+        self.phase = "INSTALL"
         self.adb("install", "-r", apk, code="RELEASE_PACKAGE_INVALID", timeout=120)
         self.installed = True
+        self.phase = "CLEAR"
         self.shell("pm", "clear", PACKAGE)
+        self.phase = "DISPLAY_SETUP"
         self.shell("wm", "size", "1080x2400")
         self.shell("wm", "density", "360")
         self.shell("settings", "put", "secure", "show_ime_with_hard_keyboard", "1")
+        self.phase = "LAUNCH"
         self.restart()
+        self.phase = "APP_FLOW"
 
     def restart(self):
         self.shell("am", "force-stop", PACKAGE)
@@ -407,6 +442,7 @@ def main():
     args = parser.parse_args()
     checks, sha, apk_hash, failure = set(), None, None, None
     android, restore_required, original_year = None, False, None
+    failure_phase = None
     email, password = "", ""
     try:
         sha = context()
@@ -467,9 +503,11 @@ def main():
         checks.add("final_sign_out")
     except Failure as error:
         failure = error
+        failure_phase = android.phase if android is not None else None
     except BaseException:
         # Suppress traceback, raw exception, process args, hierarchy and logcat.
         failure = Failure("UNEXPECTED_FAILURE")
+        failure_phase = android.phase if android is not None else None
     finally:
         # Allow bounded cleanup after SIGTERM; force termination/runner loss can
         # still prevent restoration, so no workflow cancellation implies PASS.
@@ -497,7 +535,8 @@ def main():
                 pass
         email, password = "", ""
     if failure:
-        report("BLOCKED" if failure.blocked else "FAIL", checks, failure.code, sha, apk_hash)
+        report("BLOCKED" if failure.blocked else "FAIL", checks, failure.code, sha, apk_hash,
+               failure.reason, failure_phase, failure.return_code)
         return 2 if failure.blocked else 1
     require(all(name in checks for name in CHECKS), "UNEXPECTED_FAILURE")
     report("PASS", checks, source_sha=sha, apk_hash=apk_hash)

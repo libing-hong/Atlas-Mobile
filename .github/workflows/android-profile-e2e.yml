@@ -132,6 +132,6 @@ jobs:
           always() &&
           ((steps.emulator-preflight.outcome != 'skipped' && steps.emulator-preflight.outcome != '') ||
           (steps.emulator-start.outcome != 'skipped' && steps.emulator-start.outcome != ''))
-        run: adb -s emulator-5554 emu kill >/dev/null 2>&1 || true
+        run: '"$ANDROID_HOME/platform-tools/adb" -s emulator-5554 emu kill >/dev/null 2>&1 || true'
       # No upload-artifact, screenshot, UI XML, credential file, raw logcat or
       # post-login recording. Only allowlisted check results enter the summary.

@@ -56,6 +56,14 @@ Run `35007978918`, job `104512448528`, source `eeaa4a4ca1088bb2db62333c359a15147
 
 The follow-up gives avdmanager and both emulator launches the same explicit Android user, emulator and AVD registry directories. It also requires the fixed AVD's registry pointer and `emulator -list-avds` visibility to agree before trying to boot. This is an environment repair; App code, credentials handling and all authenticated acceptance assertions remain unchanged. Its result must be recorded from the next hosted run, not inferred from source review.
 
+## AVD repair result and device-tool follow-up
+
+Run `35008824868`, job `104515329059`, source `0e4e0050cf51fa41b9fc6a322f0c9c9fcb245257`: the AVD registry guard passed, boot preflight passed in 36.3 seconds with confirmed cleanup, Release compilation passed, and normal emulator startup passed in 32.4 seconds. APK static verification completed and produced SHA-256 `d17410f1b6cd11f265df58f64665752f2bf617bd807a30dd2b7db148f2bfdf29`.
+
+The actual App step failed after one second with `ADB_OPERATION_FAILED` before the grouped `release_package` check could be marked complete. That grouped check includes device preparation and installation, so its NOT_RUN status does not mean APK static verification was skipped. Only credential preflight was marked PASS; login and all profile operations were NOT_RUN. No GPA write or restoration occurred.
+
+Source review found that startup uses the SDK's absolute adb path, while App preparation and workflow cleanup used bare `adb` from PATH. A PATH failure is a strong candidate, not a proven exception cause from the generic log. The follow-up makes all three use the same official SDK binary and fixed emulator port, validates the executable, and adds allowlisted failure reason, phase and return code without command arguments or raw output. Original business assertions and credential restrictions remain intact. A new hosted run is required to establish the outcome.
+
 ## Phone APK candidate configuration
 
 The phone APK workflow still referenced the previous integration API while the new profile tests use the dedicated profile branch. The candidate workflow is corrected to the new exact API origin and restricted to manual runs on this feature branch in the public repository. No phone APK build or upload was invoked. Its artifact-upload step remains, so a future manual run is an internal candidate build, not a private distribution mechanism or automatic approval.

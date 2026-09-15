@@ -19,6 +19,6 @@ const app: ExpoConfig = {
   plugins: ['expo-router', 'expo-secure-store'],
   ios: { supportsTablet: true, bundleIdentifier: 'com.libinghong.atlasmobile.' + config.environment },
   android: { package: 'com.libinghong.atlasmobile.' + config.environment },
-  extra: { environment: config.environment, foundation: true },
+  extra: { environment: config.environment, foundation: config.api === null },
 };
 export default app;

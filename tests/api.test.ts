@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { ApiError, createApiClient } from '../lib/api/client';
+import { decodeApplications, decodeCurrentMatters, decodeJourney, decodeMe } from '../lib/api/contracts';
 
 const path = '/api/mobile/v1/me';
 const decode = (body: unknown) => body;
@@ -65,4 +66,15 @@ test('decoder failures and credential-provider failures remain safe', async () =
   await assert.rejects(badToken.get(path, decode), errorCode('unauthenticated'));
   const badBase = createApiClient({ baseUrl: 'not a url', enabled: true, getToken: async () => 'test' });
   await assert.rejects(badBase.get(path, decode), errorCode('invalid-path'));
+});
+test('endpoint decoders accept only the public Mobile V1 envelope shapes used by the UI', () => {
+  const disabled = { enabled: false, kind: 'UNAVAILABLE', resourceId: null };
+  const matter = { id: 'm1', title: 'Next step', description: 'Do this next', status: 'ready', dueAt: null, action: disabled };
+  assert.equal(decodeCurrentMatters({ data: { currentStage: 'study_profile', completed: false, primary: matter, matters: [matter] } }).primary?.id, 'm1');
+  assert.equal(decodeApplications({ data: { items: [{ id: 'a1', schoolName: 'School', programName: 'Programme', status: 'planning', materialsReady: 0, materialsTotal: 2 }] } }).items.length, 1);
+  assert.equal(decodeJourney({ data: { currentStage: 'study_profile', completed: false, stages: [{ id: 'study_profile', state: 'current' }], tasks: [matter] } }).stages[0]?.state, 'current');
+  assert.equal(decodeMe({ data: { user: { id: 'u1', email: null, displayName: 'Student' }, preferences: { locale: 'en' } } }).user.displayName, 'Student');
+  for (const invalid of [{}, { data: null }, { data: { items: [{ schoolName: 'Missing fields' }] } }]) {
+    assert.throws(() => decodeApplications(invalid));
+  }
 });

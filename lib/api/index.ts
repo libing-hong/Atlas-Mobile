@@ -1,11 +1,11 @@
 import { createApiClient } from './client';
 import { mobileBusinessApiEnabled } from '../config/policy';
+import { mobileConfig } from '../config';
 import { getSupabaseClient } from '../supabase/client';
 
-// No endpoint is called from the UI. The reserved .invalid origin cannot be a server.
 export const mobileApi = createApiClient({
-  baseUrl: 'https://atlas-mobile.invalid',
-  enabled: mobileBusinessApiEnabled,
+  baseUrl: mobileConfig.api?.url ?? 'https://atlas-mobile.invalid',
+  enabled: mobileBusinessApiEnabled && mobileConfig.api !== null,
   getToken: async () => {
     const client = getSupabaseClient();
     if (!client) return null;

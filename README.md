@@ -1,13 +1,14 @@
 # Atlas Mobile V0.1
 
-Independent Expo / React Native client for Atlas OS. **Foundation only; offline by default.**
-No business requests, fabricated user data, AI calls, production credentials, or backend changes.
+Independent Expo / React Native client for Atlas OS. The committed default remains offline; the reviewed
+Preview configuration connects only to the isolated Student Preview and its allowlisted Mobile API origin.
 
 ## Screens
 
 Five tabs: Home (Current Matter shell), Applications (list shell), Journey (eight section labels), Atlas (assistant entry), Account (user shell, language, privacy, sign out, version).
 Sign-in and Privacy are separate stack routes. Unknown routes have a recovery screen.
-Continue and assistant actions are visibly unavailable until real services exist.
+Current Matter, Applications, Journey and Account read server-owned state in the Preview integration.
+Write actions and the assistant remain unavailable in this phase.
 
 ## Structure
 
@@ -46,11 +47,11 @@ npm run android
 npm run ios
 ```
 
-No environment file is required for the offline foundation. See .env.example.
-Use EXPO_PUBLIC_APP_ENV=development or preview. The production value deliberately fails configuration validation.
+No environment file is required for the offline foundation. See .env.example for the isolated Preview configuration.
+The production value deliberately fails configuration validation.
 
-The reviewed non-production Supabase target list is empty. Merely setting environment variables cannot enable an unreviewed server. Before preview authentication, Atlas Core must confirm a separate non-production project; its HTTPS origin must be added to lib/config/policy.ts in a reviewed change and paired with a publishable key. Never enter production configuration here.
-Business API transport remains disabled independently of authentication.
+The reviewed target is `atlas-student-preview` (`efvpndayardwjqtwtdmx`) and the exact Preview API branch alias.
+Environment variables cannot enable another origin. Never enter production configuration here.
 
 ## Architecture
 

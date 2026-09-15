@@ -9,6 +9,7 @@ type AuthContextValue = {
   session: Session | null;
   error: string | null;
   signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<'signed-in' | 'confirmation-required'>;
   signOut: () => Promise<void>;
   retry: () => void;
 };
@@ -64,6 +65,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
     const { error: signInError } = await client.auth.signInWithPassword({ email, password });
     if (signInError) throw new Error('Unable to sign in. Check your details and connection.');
   }
+  async function signUp(email: string, password: string) {
+    if (!client) throw new Error('Sign up is not available in the foundation preview.');
+    const { data, error: signUpError } = await client.auth.signUp({ email, password });
+    if (signUpError) throw signUpError;
+    return data.session ? 'signed-in' : 'confirmation-required';
+  }
   async function signOut() {
     if (!client) return;
     const { error: signOutError } = await client.auth.signOut({ scope: 'local' });
@@ -72,7 +79,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     setStatus('signed-out');
   }
   return <AuthContext.Provider value={{
-    status, session, error, signIn, signOut,
+    status, session, error, signIn, signUp, signOut,
     retry: () => { setError(null); setStatus('restoring'); setAttempt(value => value + 1); },
   }}>{children}</AuthContext.Provider>;
 }

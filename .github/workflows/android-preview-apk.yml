@@ -1,0 +1,55 @@
+name: Android Preview APK
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "app/**"
+      - "assets/**"
+      - "components/**"
+      - "features/**"
+      - "lib/**"
+      - "types/**"
+      - "app.config.ts"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/android-preview-apk.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-preview-apk:
+    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'integration/mobile-preview-v1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      EXPO_PUBLIC_APP_ENV: preview
+      EXPO_PUBLIC_SUPABASE_URL: https://efvpndayardwjqtwtdmx.supabase.co
+      EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_P0c1JB0dFOICwntFalOxOw_wetxrArJ
+      EXPO_PUBLIC_ATLAS_API_URL: https://atlas-os-preview-git-integration-m-1b658c-libing-hongs-projects.vercel.app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.1
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: node --import tsx --test tests/*.test.ts
+      - run: npx expo prebuild --no-install --platform android
+      # Release mode embeds the JavaScript bundle so this APK runs without Metro.
+      - run: ./gradlew assembleRelease --no-daemon
+        working-directory: android
+      - uses: actions/upload-artifact@v4
+        with:
+          name: atlas-mobile-preview-android-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 14

@@ -1,13 +1,19 @@
 import { View } from 'react-native';
 import { Body, Heading, Screen, styles } from '../../components/ui';
-// These are navigation labels from the V0.1 brief, not a computed user journey.
-const sections = ['Study Profile', 'School Plan', 'Applications', 'Offer', 'Visa', 'Pre-departure', 'Arrival', 'Settling in'];
+import { RemoteContent } from '../../components/RemoteContent';
+import { decodeJourney } from '../../lib/api/contracts';
+import { useMobileResource } from '../../lib/api/use-mobile-resource';
+import { useI18n } from '../../lib/i18n/I18nProvider';
+const neverEmpty = () => false;
 export default function JourneyScreen() {
-  return <Screen title="Your journey" subtitle="From your first plan to settling in.">
-    <Body>This is an overview. Your current stage and progress are not connected yet.</Body>
-    {sections.map(section => <View key={section} style={styles.row}>
-      <Heading>{section}</Heading>
-      <Body>Status unavailable</Body>
-    </View>)}
+  const { t } = useI18n();
+  const { state, retry } = useMobileResource('/api/mobile/v1/journey', decodeJourney, neverEmpty);
+  return <Screen title={t('journeyTitle')} subtitle={t('journeySubtitle')}>
+    <RemoteContent state={state} retry={retry}>{data => <>
+      <Body>{t('currentStage')}: {data.currentStage}</Body>
+      {data.stages.map(stage => <View key={stage.id} style={styles.row}>
+        <Heading>{stage.id.replaceAll('_', ' ')}</Heading><Body>{stage.state}</Body>
+      </View>)}
+    </>}</RemoteContent>
   </Screen>;
 }

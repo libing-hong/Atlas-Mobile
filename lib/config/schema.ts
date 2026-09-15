@@ -4,6 +4,7 @@ export type Environment = 'development' | 'preview' | 'production';
 export type MobileConfig = {
   environment: Exclude<Environment, 'production'>;
   auth: { url: string; publishableKey: string } | null;
+  api: { url: string } | null;
 };
 type Input = {
   environment?: string | undefined;
@@ -17,10 +18,10 @@ export function readConfig(input: Input): MobileConfig {
   if (environment !== 'development' && environment !== 'preview') {
     throw new Error('Unknown mobile environment.');
   }
-  if (input.apiUrl?.trim()) throw new Error('Mobile API contracts are not approved.');
   const url = input.supabaseUrl?.trim();
   const key = input.publishableKey?.trim();
-  if (!url && !key) return { environment, auth: null };
+  const apiUrl = input.apiUrl?.trim();
+  if (!url && !key && !apiUrl) return { environment, auth: null, api: null };
   if (!url || !key) throw new Error('Both public Supabase settings are required.');
   if (!key.startsWith('sb_publishable_')) throw new Error('Only publishable client keys are accepted.');
   const parsed = new URL(url);
@@ -29,8 +30,13 @@ export function readConfig(input: Input): MobileConfig {
     throw new Error('Supabase must use an approved HTTPS origin.');
   }
   const approved = approvedNonProductionTargets.some(
-    target => target.environment === environment && target.supabaseOrigin === parsed.origin,
+    target => target.environment === environment && target.supabaseOrigin === parsed.origin && target.apiOrigin === apiUrl,
   );
   if (!approved) throw new Error('Non-production Supabase target has not been approved.');
-  return { environment, auth: { url: parsed.origin, publishableKey: key } };
+  if (!apiUrl) throw new Error('The approved Mobile API origin is required.');
+  const api = new URL(apiUrl);
+  if (api.protocol !== 'https:' || api.username || api.password || api.search || api.hash || api.pathname !== '/') {
+    throw new Error('Mobile API must use an approved HTTPS origin.');
+  }
+  return { environment, auth: { url: parsed.origin, publishableKey: key }, api: { url: api.origin } };
 }

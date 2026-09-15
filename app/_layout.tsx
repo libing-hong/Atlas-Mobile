@@ -5,27 +5,31 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '../lib/auth/AuthProvider';
 import { ErrorState, LoadingState } from '../components/RemoteContent';
 import { Screen } from '../components/ui';
+import { I18nProvider, useI18n } from '../lib/i18n/I18nProvider';
 
 export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
-  return <SafeAreaProvider><Screen title="Let's try again">
-    <ErrorState message="This screen could not be opened." retry={retry} />
-  </Screen></SafeAreaProvider>;
+  return <SafeAreaProvider><I18nProvider><ScreenError retry={retry} /></I18nProvider></SafeAreaProvider>;
+}
+function ScreenError({ retry }: { retry: () => void }) {
+  const { t } = useI18n();
+  return <Screen title={t('errorTitle')}><ErrorState message={t('screenError')} retry={retry} /></Screen>;
 }
 function Routes() {
   const { status, error, retry } = useAuth();
-  if (status === 'restoring') return <Screen title="Welcome back"><LoadingState /></Screen>;
-  if (status === 'error') return <Screen title="Welcome back">
-    <ErrorState message={error ?? 'Unable to restore your session.'} retry={retry} />
+  const { t } = useI18n();
+  if (status === 'restoring') return <Screen title={t('restoreTitle')}><LoadingState /></Screen>;
+  if (status === 'error') return <Screen title={t('restoreTitle')}>
+    <ErrorState message={error ?? t('restoreError')} retry={retry} />
   </Screen>;
   // Foundation is a public, data-free shell, never an authenticated session.
   const canViewShell = status === 'foundation' || status === 'signed-in';
   return <Stack screenOptions={{ headerShown: false }}>
     <Stack.Protected guard={canViewShell}><Stack.Screen name="(tabs)" /></Stack.Protected>
     <Stack.Protected guard={status !== 'signed-in'}><Stack.Screen name="(auth)" /></Stack.Protected>
-    <Stack.Screen name="privacy" options={{ headerShown: true, title: 'Privacy' }} />
+    <Stack.Screen name="privacy" options={{ headerShown: true, title: t('privacy') }} />
     <Stack.Screen name="+not-found" />
   </Stack>;
 }
 export default function RootLayout() {
-  return <SafeAreaProvider><AuthProvider><StatusBar style="dark" /><Routes /></AuthProvider></SafeAreaProvider>;
+  return <SafeAreaProvider><I18nProvider><AuthProvider><StatusBar style="dark" /><Routes /></AuthProvider></I18nProvider></SafeAreaProvider>;
 }

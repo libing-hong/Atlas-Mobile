@@ -8,7 +8,9 @@ The designated account is already confirmed in the isolated Student Preview proj
 
 Review `.github/workflows/android-profile-e2e.yml` and `scripts/android-profile-e2e.py` when available in the draft Mobile PR. The job is restricted to the public Atlas-Mobile repository's `feature/native-team-first-flow-v1` branch and standard GitHub-hosted runners. It must stop before the build when either test secret is missing.
 
-Storing credentials in GitHub makes them available to workflows that explicitly use those secrets and to collaborators able to change those workflows. Use only the dedicated isolated test account, containing synthetic records. The user must explicitly accept that destination and purpose and enter the values directly in GitHub; do not send a password in chat. Automatic review rejected the coordinator's attempt to save even the test mailbox without that destination-specific consent, so neither credential is assumed configured.
+Storing credentials in GitHub makes them available to workflows that explicitly use those secrets and to collaborators able to change those workflows. Use only the dedicated isolated test account, containing synthetic records. The user must explicitly accept that destination and purpose. Prefer direct user entry in GitHub; an explicitly authorized coordinator may fill the encrypted settings form. Do not request passwords in chat or record values in code, documentation or diagnostics.
+
+The initial coordinator attempt was rejected before destination-specific consent. On 2026-09-15, the user explicitly approved this use and asked the coordinator to fill both entries. Both repository secrets were then saved through the normal authenticated GitHub settings UI, which confirmed their creation. The previously blocked run `35002548097` was rerun against the unchanged reviewed source `b6451c361a7ba909a6cd597ecbeda886316f0844`. Credential readiness is confirmed; the final native acceptance result is tracked separately in `2026-09-15-native-profile-verification.md`.
 
 After accepting this use, add these repository secrets under Settings → Secrets and variables → Actions:
 

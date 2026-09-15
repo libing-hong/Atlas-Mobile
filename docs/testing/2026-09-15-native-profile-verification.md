@@ -40,6 +40,22 @@ The first hosted run `35002548097`, job `104494232465`, stopped as intended at `
 
 Automatic review rejected storing the test mailbox in GitHub Actions without explicit consent to that destination and workflow/collaborator access. No credential configuration was completed. See `native-profile-auth-handoff.md` for the two required secret names and the direct-entry process. The user should not repeat registration or send an Atlas password in chat.
 
+## Approved credentials and second authenticated attempt
+
+On 2026-09-15, the user explicitly approved the GitHub destination and automated testing purpose and authorized the coordinator to fill the encrypted settings. The normal GitHub settings UI confirmed creation of both repository secrets. No credential values are recorded here.
+
+Run `35002548097`, attempt 2, job `104503081678`, source `b6451c361a7ba909a6cd597ecbeda886316f0844`: credential preflight, KVM, TypeScript, lint, 92 logic tests, Release build and official SDK/AVD preparation passed. The emulator startup step failed after 4 seconds with `EMULATOR_START_FAILED` (18:16:24–18:16:28 UTC). Actual login and profile checks were skipped; there was no profile mutation requiring restoration. The generic error did not identify the cause. This supersedes the earlier missing-credential blocker but does not establish authenticated acceptance.
+
+The source review also clarified that the `home_refresh` assertion only proves that Home successfully displays its current-matter data after saving. It does not independently prove a new request revision or changed next-action calculation. GPA 85→84 should not itself be expected to change completeness or the next action.
+
+The reviewed follow-up moves a credential-free emulator boot preflight before Gradle, terminates that preflight process before compilation, and starts a fresh emulator after the build. Only the preflight captures startup output, drains it continuously and retains at most 256 KiB in memory; it reports fixed error categories rather than raw logs. Normal startup uses DEVNULL. The actual App script and acceptance assertions are unchanged. The local execution environment became unavailable, so no new local syntax result is claimed; the hosted workflow includes Python compilation before SDK setup.
+
+## Phone APK candidate configuration
+
+The phone APK workflow still referenced the previous integration API while the new profile tests use the dedicated profile branch. The candidate workflow is corrected to the new exact API origin and restricted to manual runs on this feature branch in the public repository. No phone APK build or upload was invoked. Its artifact-upload step remains, so a future manual run is an internal candidate build, not a private distribution mechanism or automatic approval.
+
+Before handing over a phone APK, separately verify the accepted source revision, ARM libraries, package/version metadata, embedded bundle and signature. The version is still 0.1.0 without an explicit Android versionCode; the old/new signing certificates have not been compared, so an in-place upgrade is not promised. Full business parity remains unfinished.
+
 ## Unpassed gates
 
 Authenticated native GET/PUT, save/reopen persistence, token expiry and account switching on device, cross-user isolation, ARM phone installation, and the full application/material/visa/journey story remain unaccepted. Synthetic transport tests, anonymous emulator launch and authenticated Web autosave do not stand in for these checks. Pending profile facts are read-only, and other unfinished native actions remain explicitly unavailable.

@@ -5,6 +5,7 @@ on:
     branches: [feature/native-team-first-flow-v1]
     paths:
       - scripts/android-profile-e2e.py
+      - scripts/android-start-emulator.py
       - .github/workflows/android-profile-e2e.yml
   workflow_dispatch:
 
@@ -78,52 +79,21 @@ jobs:
       - run: npm run lint
       - run: node --import tsx --test tests/*.test.ts
       - run: npx expo prebuild --no-install --platform android
-      - name: Build bundled release for the x86_64 emulator
-        working-directory: android
-        run: ./gradlew assembleRelease --no-daemon --max-workers=2 -PreactNativeArchitectures=x86_64
+      - name: Check Python syntax before emulator setup
+        run: python3 -m py_compile scripts/android-start-emulator.py scripts/android-profile-e2e.py
       - name: Prepare official Android SDK and fixed AVD without credentials
         run: |
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install 'platform-tools' 'emulator' 'system-images;android-35;google_apis;x86_64' >/dev/null
           printf 'no\n' | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --force --name atlas_profile_acceptance --package 'system-images;android-35;google_apis;x86_64' --device pixel_6 --path "$RUNNER_TEMP/atlas-profile-avd" >/dev/null
+      - name: Preflight emulator boot before building without credentials
+        id: emulator-preflight
+        run: python3 scripts/android-start-emulator.py --preflight
+      - name: Build bundled release for the x86_64 emulator
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon --max-workers=2 -PreactNativeArchitectures=x86_64
       - name: Start official emulator without credentials or persisted logs
         id: emulator-start
-        run: |
-          python3 - <<'PY'
-          import os, subprocess, sys, time
-          from pathlib import Path
-          sdk = Path(os.environ['ANDROID_HOME'])
-          config = Path(os.environ['RUNNER_TEMP']) / 'atlas-profile-avd' / 'config.ini'
-          try:
-              with config.open('a') as handle:
-                  handle.write('\nhw.keyboard=yes\nhw.ramSize=3072\nhw.cpu.ncore=2\n')
-              process = subprocess.Popen([
-                  str(sdk / 'emulator' / 'emulator'), '-avd', 'atlas_profile_acceptance',
-                  '-port', '5554', '-no-window', '-gpu', 'swiftshader_indirect',
-                  '-accel', 'on', '-no-snapshot', '-noaudio', '-no-boot-anim', '-camera-back', 'none',
-              ], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                  start_new_session=True)
-              adb = [str(sdk / 'platform-tools' / 'adb'), '-s', 'emulator-5554']
-              deadline = time.monotonic() + 300
-              while time.monotonic() < deadline:
-                  if process.poll() is not None:
-                      raise RuntimeError()
-                  boot = subprocess.run(adb + ['shell', 'getprop', 'sys.boot_completed'],
-                                        capture_output=True, timeout=15, check=False)
-                  if boot.returncode == 0 and boot.stdout.strip() == b'1':
-                      break
-                  time.sleep(2)
-              else:
-                  raise RuntimeError()
-              for setting in ('window_animation_scale', 'transition_animation_scale', 'animator_duration_scale'):
-                  subprocess.run(adb + ['shell', 'settings', 'put', 'global', setting, '0'],
-                                 capture_output=True, timeout=15, check=True)
-              subprocess.run(adb + ['shell', 'wm', 'dismiss-keyguard'],
-                             capture_output=True, timeout=15, check=True)
-          except Exception:
-              print('BLOCKED EMULATOR_START_FAILED')
-              sys.exit(2)
-          print('PASS EMULATOR_BOOT_COMPLETED')
-          PY
+        run: python3 scripts/android-start-emulator.py
       - name: Exercise designated synthetic profile through normal Android login
         # These credentials are absent from SDK setup and the emulator process.
         env:
@@ -131,7 +101,10 @@ jobs:
           ATLAS_PREVIEW_TEST_PASSWORD: ${{ secrets.ATLAS_PREVIEW_TEST_PASSWORD }}
         run: python3 scripts/android-profile-e2e.py --apk android/app/build/outputs/apk/release/app-release.apk
       - name: Stop ephemeral emulator
-        if: always() && steps.emulator-start.outcome != 'skipped' && steps.emulator-start.outcome != ''
+        if: >-
+          always() &&
+          ((steps.emulator-preflight.outcome != 'skipped' && steps.emulator-preflight.outcome != '') ||
+          (steps.emulator-start.outcome != 'skipped' && steps.emulator-start.outcome != ''))
         run: adb -s emulator-5554 emu kill >/dev/null 2>&1 || true
       # No upload-artifact, screenshot, UI XML, credential file, raw logcat or
       # post-login recording. Only allowlisted check results enter the summary.

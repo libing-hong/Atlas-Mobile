@@ -22,6 +22,7 @@ export default function AccountScreen() {
     finally { setBusy(false); }
   }
   return <Screen title={t('accountTitle')} subtitle={t('accountSubtitle')}>
+    <Body>{t('accountReadOnly')}</Body>
     <Panel><Heading>{session?.user.email ?? t('notSignedIn')}</Heading>
       <Body>{status === 'foundation' ? t('previewMode') : t('signedInDevice')}</Body>
       {status === 'foundation' ? <Button label={t('viewSignIn')} onPress={() => router.push('/(auth)/sign-in')} /> : null}
@@ -29,6 +30,7 @@ export default function AccountScreen() {
     {status === 'signed-in' ? <RemoteContent state={me.state} retry={me.retry}>{data =>
       <Panel><Heading>{data.user.displayName ?? t('atlasStudent')}</Heading><Body>{t('apiConnected')} · {data.preferences.locale}</Body></Panel>
     }</RemoteContent> : null}
+    {status === 'signed-in' ? <Button label={t('goProfile')} onPress={() => router.push('/profile')} /> : null}
     <View style={styles.row}><Heading>{t('language')}</Heading><Body>{t('languageValue')}</Body>
       <Button label={locale === 'zh' ? 'Switch to English' : '切换为简体中文'} onPress={() => setLocale(locale === 'zh' ? 'en' : 'zh')} /></View>
     <View style={styles.row}><Heading>{t('privacy')}</Heading><Button label={t('privacyInfo')} onPress={() => router.push('/privacy')} /></View>

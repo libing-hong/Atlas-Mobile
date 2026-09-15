@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, TextInput } from 'react-native';
 import { router } from 'expo-router';
 import { Body, Button, Screen, TextButton, styles } from '../../components/ui';
 import { ErrorState } from '../../components/RemoteContent';
 import { useAuth } from '../../lib/auth/AuthProvider';
+import { presentAuthError } from '../../lib/auth/error-presentation';
+import { validateSignUpPassword } from '../../lib/auth/password-policy';
 import { useI18n } from '../../lib/i18n/I18nProvider';
 
 export default function SignInScreen() {
@@ -15,11 +17,19 @@ export default function SignInScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const submitting = useRef(false);
   const foundation = status === 'foundation';
   async function submit() {
-    setBusy(true); setError(null);
-    if (mode === 'sign-up' && password.length < 8) { setError(t('passwordTooShort')); setBusy(false); return; }
-    if (mode === 'sign-up' && password !== confirmPassword) { setError(t('passwordsMismatch')); setBusy(false); return; }
+    if (submitting.current || foundation) return;
+    setError(null); setSuccess(null);
+    if (mode === 'sign-up') {
+      const passwordError = validateSignUpPassword(password);
+      if (passwordError) { setError(t(passwordError)); return; }
+      if (password !== confirmPassword) { setError(t('passwordsMismatch')); return; }
+    }
+    submitting.current = true;
+    setBusy(true);
     try {
       if (mode === 'sign-in') await signIn(email.trim(), password);
       else {
@@ -29,17 +39,23 @@ export default function SignInScreen() {
         }
       }
     }
-    catch { setError(t('authError')); }
-    finally { setPassword(''); setBusy(false); }
+    catch (authError) { setError(presentAuthError(authError, locale).message); }
+    finally { setPassword(''); setConfirmPassword(''); setBusy(false); submitting.current = false; }
   }
-  const [success, setSuccess] = useState<string | null>(null);
   function switchMode(next: 'sign-in' | 'sign-up') {
+    if (submitting.current) return;
     setMode(next); setError(null); setSuccess(null); setPassword(''); setConfirmPassword('');
+  }
+  function switchLanguage() {
+    if (submitting.current) return;
+    setError(null); setSuccess(null);
+    setLocale(locale === 'zh' ? 'en' : 'zh');
   }
   return <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
     <Screen title={t('welcome')} subtitle={t('welcomeSubtitle')}>
-      <TextButton label={locale === 'zh' ? 'English' : '简体中文'} onPress={() => setLocale(locale === 'zh' ? 'en' : 'zh')} />
-      {foundation ? <Body>Sign in will be available in a future preview.</Body> : null}
+      <TextButton label={locale === 'zh' ? 'English' : '简体中文'} disabled={busy} onPress={switchLanguage} />
+      <Body>{t('testAccountNotice')}</Body>
+      {foundation ? <Body>{t('foundationSignIn')}</Body> : null}
       <Body>{t('email')}</Body>
       <TextInput accessibilityLabel={t('email')} style={styles.input} value={email} onChangeText={setEmail}
         editable={!foundation && !busy} autoCapitalize="none" autoCorrect={false}
@@ -47,8 +63,8 @@ export default function SignInScreen() {
       <Body>{t('password')}</Body>
       <TextInput accessibilityLabel={t('password')} style={styles.input} value={password} onChangeText={setPassword}
         editable={!foundation && !busy} secureTextEntry autoCapitalize="none" autoCorrect={false}
-        autoComplete="current-password" textContentType="password" />
-      {mode === 'sign-up' ? <><Body>{t('confirmPassword')}</Body>
+        autoComplete={mode === 'sign-up' ? 'new-password' : 'current-password'} textContentType={mode === 'sign-up' ? 'newPassword' : 'password'} />
+      {mode === 'sign-up' ? <><Body>{t('passwordRequirements')}</Body><Body>{t('confirmPassword')}</Body>
         <TextInput accessibilityLabel={t('confirmPassword')} style={styles.input} value={confirmPassword}
           onChangeText={setConfirmPassword} editable={!foundation && !busy} secureTextEntry
           autoCapitalize="none" autoCorrect={false} autoComplete="new-password" />
@@ -59,8 +75,9 @@ export default function SignInScreen() {
         disabled={foundation || busy || !email.trim() || !password || (mode === 'sign-up' && !confirmPassword)}
         onPress={() => { void submit(); }} />
       <TextButton label={t(mode === 'sign-in' ? 'noAccount' : 'haveAccount')}
+        disabled={busy}
         onPress={() => switchMode(mode === 'sign-in' ? 'sign-up' : 'sign-in')} />
-      {foundation ? <Button label="Return to preview" onPress={() => router.replace('/')} /> : null}
+      {foundation ? <Button label={t('returnToPreview')} onPress={() => router.replace('/')} /> : null}
     </Screen>
   </KeyboardAvoidingView>;
 }

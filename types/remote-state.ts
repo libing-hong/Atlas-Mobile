@@ -2,7 +2,7 @@ export type RemoteState<T> =
   | { status: 'unavailable'; message: string }
   | { status: 'loading' }
   | { status: 'empty'; message: string }
-  | { status: 'error'; message: string }
+  | { status: 'error'; message: string; recovery?: 'retry' | 'account' | 'none'; errorCode?: string; httpStatus?: number; serverCode?: string; requestId?: string }
   | { status: 'ready'; data: T };
 
 // Every business response remains unknown until an endpoint-specific decoder validates it.

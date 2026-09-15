@@ -1,19 +1,8 @@
 name: Android Preview APK
 
 on:
-  pull_request:
-    branches: [main]
-    paths:
-      - "app/**"
-      - "assets/**"
-      - "components/**"
-      - "features/**"
-      - "lib/**"
-      - "types/**"
-      - "app.config.ts"
-      - "package.json"
-      - "package-lock.json"
-      - ".github/workflows/android-preview-apk.yml"
+  # Internal candidates only; readiness is assessed in the verification report.
+  # Do not automatically hand an APK to testers when a PR changes.
   workflow_dispatch:
 
 permissions:
@@ -21,14 +10,18 @@ permissions:
 
 jobs:
   build-preview-apk:
-    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'integration/mobile-preview-v1'
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      github.repository == 'libing-hong/Atlas-Mobile' &&
+      github.event.repository.visibility == 'public' &&
+      github.ref == 'refs/heads/feature/native-team-first-flow-v1'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
       EXPO_PUBLIC_APP_ENV: preview
       EXPO_PUBLIC_SUPABASE_URL: https://efvpndayardwjqtwtdmx.supabase.co
       EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_P0c1JB0dFOICwntFalOxOw_wetxrArJ
-      EXPO_PUBLIC_ATLAS_API_URL: https://atlas-os-preview-git-integration-m-1b658c-libing-hongs-projects.vercel.app
+      EXPO_PUBLIC_ATLAS_API_URL: https://atlas-os-preview-git-feature-nativ-e1665d-libing-hongs-projects.vercel.app
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

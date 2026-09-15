@@ -22,6 +22,10 @@ test('approved isolated Preview configuration is accepted only as an exact pair'
     auth: { url: input.supabaseUrl, publishableKey: input.publishableKey }, api: { url: input.apiUrl } });
   assert.throws(() => readConfig({ ...input, apiUrl: 'https://example.com' }));
   assert.throws(() => readConfig({ ...input, environment: 'development' }));
+  const nativeProfile = { ...input, apiUrl: 'https://atlas-os-preview-git-feature-nativ-e1665d-libing-hongs-projects.vercel.app' };
+  assert.equal(readConfig(nativeProfile).api?.url, nativeProfile.apiUrl);
+  assert.throws(() => readConfig({ ...nativeProfile, supabaseUrl: 'https://unapproved.supabase.co' }));
+  assert.throws(() => readConfig({ ...nativeProfile, apiUrl: nativeProfile.apiUrl + '/profile' }));
 });
 test('partial, privileged and unapproved public credentials are refused', () => {
   assert.throws(() => readConfig({ supabaseUrl: 'https://example.com' }));

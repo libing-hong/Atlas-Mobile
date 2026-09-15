@@ -63,7 +63,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   async function signIn(email: string, password: string) {
     if (!client) throw new Error('Sign in is not available in the foundation preview.');
     const { error: signInError } = await client.auth.signInWithPassword({ email, password });
-    if (signInError) throw new Error('Unable to sign in. Check your details and connection.');
+    if (signInError) throw signInError;
   }
   async function signUp(email: string, password: string) {
     if (!client) throw new Error('Sign up is not available in the foundation preview.');

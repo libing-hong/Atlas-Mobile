@@ -15,16 +15,17 @@ function ScreenError({ retry }: { retry: () => void }) {
   return <Screen title={t('errorTitle')}><ErrorState message={t('screenError')} retry={retry} /></Screen>;
 }
 function Routes() {
-  const { status, error, retry } = useAuth();
+  const { status, retry } = useAuth();
   const { t } = useI18n();
   if (status === 'restoring') return <Screen title={t('restoreTitle')}><LoadingState /></Screen>;
   if (status === 'error') return <Screen title={t('restoreTitle')}>
-    <ErrorState message={error ?? t('restoreError')} retry={retry} />
+    <ErrorState message={t('restoreError')} retry={retry} />
   </Screen>;
   // Foundation is a public, data-free shell, never an authenticated session.
   const canViewShell = status === 'foundation' || status === 'signed-in';
   return <Stack screenOptions={{ headerShown: false }}>
     <Stack.Protected guard={canViewShell}><Stack.Screen name="(tabs)" /></Stack.Protected>
+    <Stack.Protected guard={status === 'signed-in'}><Stack.Screen name="profile" /></Stack.Protected>
     <Stack.Protected guard={status !== 'signed-in'}><Stack.Screen name="(auth)" /></Stack.Protected>
     <Stack.Screen name="privacy" options={{ headerShown: true, title: t('privacy') }} />
     <Stack.Screen name="+not-found" />

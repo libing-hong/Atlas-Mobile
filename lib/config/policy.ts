@@ -11,5 +11,9 @@ export const approvedNonProductionTargets: readonly {
   environment: 'preview',
   supabaseOrigin: 'https://efvpndayardwjqtwtdmx.supabase.co',
   apiOrigin: 'https://atlas-os-preview-git-feature-nativ-e1665d-libing-hongs-projects.vercel.app',
+}, {
+  environment: 'preview',
+  supabaseOrigin: 'https://efvpndayardwjqtwtdmx.supabase.co',
+  apiOrigin: 'https://atlas-os-preview-git-feature-nativ-0c2292-libing-hongs-projects.vercel.app',
 }];
 export const mobileBusinessApiEnabled = true;

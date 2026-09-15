@@ -24,6 +24,8 @@ const messages = {
     invalidPath: '此功能的服务地址配置有误，请反馈给开发团队。无需修改你的手机设置。',
     unknown: '暂时无法获取信息，当前无法确认你的进度。请重试；若持续失败，请反馈给开发团队。',
     profileRequired: '请先完善留学档案，Atlas 才能根据你的情况安排下一步。',
+    selectionUnavailable: '这个项目已不在当前可选方案中，请返回选校方案刷新。',
+    applicationNotFound: '暂时找不到这项申请，请返回“我的申请”查看最新列表。',
   },
   en: {
     disabled: 'Mobile preview services are not connected, so your information cannot be loaded. Please wait for the development team to complete setup.',
@@ -39,6 +41,8 @@ const messages = {
     invalidPath: 'This feature has an invalid service address. Please report it to the development team. You do not need to change your phone settings.',
     unknown: 'Unable to load this information, so your progress cannot be confirmed. Try again and report it if this continues.',
     profileRequired: 'Complete your study profile so Atlas can organise your next step.',
+    selectionUnavailable: 'This programme is no longer available in your plan. Return to the school plan and refresh.',
+    applicationNotFound: 'This application is unavailable. Return to My applications for the latest list.',
   },
 } as const;
 
@@ -58,6 +62,8 @@ export function presentApiError(error: unknown, locale: ApiLocale): ErrorPresent
     case 'invalid-path': key = 'invalidPath'; recovery = 'none'; break;
     case 'http':
       if (error.status === 409 && error.serverCode === 'PROFILE_REQUIRED') { key = 'profileRequired'; recovery = 'none'; }
+      else if (error.status === 404 && error.serverCode === 'SELECTION_UNAVAILABLE') { key = 'selectionUnavailable'; recovery = 'none'; }
+      else if (error.status === 404 && error.serverCode === 'APPLICATION_NOT_FOUND') { key = 'applicationNotFound'; recovery = 'none'; }
       else if (error.status === 404) { key = 'missing'; recovery = 'none'; }
       else if (error.status === 429) key = 'rateLimited';
       else if (error.status && error.status >= 500) key = 'unavailable';

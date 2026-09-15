@@ -54,6 +54,8 @@ class Smoke:
         self.checks = []
         self.last_xml = None
         self.device_verified = False
+        self.launcher_recovery_attempted = False
+        self.launcher_recovered = False
 
     def adb(self, *args, **kwargs):
         return command("adb", "-s", self.serial, *args, **kwargs)
@@ -62,7 +64,7 @@ class Smoke:
         self.checks.append({"check": check, "status": "PASS"})
         print("PASS:", check, flush=True)
 
-    def dump(self):
+    def read_hierarchy(self):
         self.adb("shell", "uiautomator", "dump", REMOTE_XML, timeout=20)
         xml = self.adb("exec-out", "cat", REMOTE_XML)
         if FATAL.search(xml):
@@ -70,6 +72,53 @@ class Smoke:
         root = ET.fromstring(xml)
         self.last_xml = xml
         return root
+
+    @staticmethod
+    def launcher_close_button(root):
+        # Only the observed emulator launcher ANR qualifies. Atlas errors and
+        # every other system dialog continue to fail the original assertions.
+        titles = [node for node in root.iter("node") if
+                  node.get("package") == "android" and
+                  node.get("resource-id") == "android:id/alertTitle" and
+                  node.get("text") == "Pixel Launcher isn't responding"]
+        if not titles:
+            return None
+        buttons = [node for node in root.iter("node") if
+                   node.get("package") == "android" and
+                   node.get("resource-id") == "android:id/aerr_close" and
+                   node.get("class") == "android.widget.Button" and
+                   node.get("text") == "Close app" and
+                   node.get("clickable") == "true" and node.get("enabled") == "true"]
+        if len(titles) != 1 or len(buttons) != 1:
+            raise RuntimeError("The emulator launcher dialog is not uniquely identifiable")
+        return buttons[0]
+
+    def dump(self):
+        root = self.read_hierarchy()
+        button = self.launcher_close_button(root)
+        if button is None:
+            return root
+        if self.launcher_recovery_attempted:
+            raise RuntimeError("The emulator launcher became unresponsive more than once")
+        self.launcher_recovery_attempted = True
+        # Preserve the actual obstruction before interacting with it.
+        self.capture("00-emulator-launcher-anr")
+        coordinates = re.fullmatch(r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]", button.get("bounds", ""))
+        if not coordinates:
+            raise RuntimeError("The emulator launcher close control has no usable bounds")
+        left, top, right, bottom = map(int, coordinates.groups())
+        if not (0 <= left < right <= 1080 and 0 <= top < bottom <= 2400):
+            raise RuntimeError("The emulator launcher close control is outside the viewport")
+        self.adb("shell", "input", "tap", str((left + right) // 2), str((top + bottom) // 2))
+        deadline = time.monotonic() + 10
+        while time.monotonic() < deadline:
+            root = self.read_hierarchy()
+            if self.launcher_close_button(root) is None:
+                self.launcher_recovered = True
+                self.record("One identified Pixel Launcher ANR was closed; original App assertions remain required")
+                return root
+            time.sleep(0.5)
+        raise RuntimeError("The identified emulator launcher dialog did not close")
 
     @staticmethod
     def find(root, label, input_only=False):
@@ -243,6 +292,7 @@ def main():
         evidence["failure"] = str(error)[:500]
         print("FAIL:", evidence["failure"], file=sys.stderr, flush=True)
     finally:
+        evidence["emulatorLauncherRecovered"] = smoke.launcher_recovered
         if smoke.device_verified:
             try:
                 smoke.collect_logs()

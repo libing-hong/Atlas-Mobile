@@ -2,6 +2,16 @@
 
 Status: NOT READY for phone distribution. New authenticated Android acceptance is pending.
 
+## Current persisted candidate
+
+Mobile source: `30a6ea21fecdaa4cca782de2f2139e03e8a8d786`, draft [Atlas-Mobile PR #5](https://github.com/libing-hong/Atlas-Mobile/pull/5).
+
+[Mobile foundation run 35033339899](https://github.com/libing-hong/Atlas-Mobile/actions/runs/35033339899) completed successfully for this exact source after the Expo patch correction: clean install, TypeScript, lint, all 113 tests, online Expo configuration/dependency validation, Android and iOS bundle exports, and both native prebuilds. This resolves the previous dependency gate; it is not an on-device iOS acceptance result.
+
+[Android school-plan read run 35033336540](https://github.com/libing-hong/Atlas-Mobile/actions/runs/35033336540) is in progress at this checkpoint. It has passed credentials preflight, code checks, Expo validation and all 12 Python automation regressions. No Android UI PASS is claimed before its final result. The source is fixed to the candidate above; later documentation-only commits do not change the tested app.
+
+The existing Student Preview service key remains masked and has not been copied. A Vercel Secret draft is prepared only for `feature/native-school-applications-v1`, with Production deselected and no value entered or saved. Browser confirmation rules require specific approval before granting the new backend this high-privilege credential. This configuration prerequisite blocks live application-creation acceptance, not the read-only Android run.
+
 ## Implemented scope
 
 Native Chinese/English school-plan list, programme details, evidence and eligibility comparison, owned selection submission, duplicate/readback recovery, application detail with Core next step, and navigation from Home/My applications. No AI generation, external school submission, material upload or new service purchase is invoked.

@@ -135,10 +135,10 @@ def keycodes(value):
     return result
 
 
-def context():
+def context(expected_branch=BRANCH):
     require(os.environ.get("GITHUB_ACTIONS") == "true"
             and os.environ.get("GITHUB_REPOSITORY") == REPOSITORY
-            and os.environ.get("GITHUB_REF") == BRANCH, "CONTEXT_NOT_ALLOWED", True)
+            and os.environ.get("GITHUB_REF") == expected_branch, "CONTEXT_NOT_ALLOWED", True)
     try:
         event = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text())
         require(event["repository"]["visibility"] == "public", "CONTEXT_NOT_ALLOWED", True)

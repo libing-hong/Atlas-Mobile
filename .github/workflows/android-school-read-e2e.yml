@@ -1,0 +1,153 @@
+name: Android School Plan Read Acceptance
+
+on:
+  push:
+    branches: [feature/native-school-applications-v1]
+    paths:
+      - app/**
+      - components/**
+      - features/**
+      - lib/**
+      - types/**
+      - tests/**
+      - package.json
+      - package-lock.json
+      - app.config.ts
+      - tsconfig.json
+      - scripts/android-school-read-e2e.py
+      - scripts/android-profile-e2e.py
+      - scripts/android-start-emulator.py
+      - scripts/tests/android_profile_automation_test.py
+      - .github/workflows/android-school-read-e2e.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Shares the designated-account lock with profile acceptance. This workflow
+# reads business data only; it never creates an application or edits a profile.
+concurrency:
+  group: atlas-preview-designated-profile-account
+  cancel-in-progress: false
+
+jobs:
+  authenticated-school-read:
+    if: >-
+      github.repository == 'libing-hong/Atlas-Mobile' &&
+      github.event.repository.visibility == 'public' &&
+      github.ref == 'refs/heads/feature/native-school-applications-v1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      CI: "true"
+      EXPO_NO_TELEMETRY: "1"
+      EXPO_PUBLIC_APP_ENV: preview
+      EXPO_PUBLIC_SUPABASE_URL: https://efvpndayardwjqtwtdmx.supabase.co
+      # Existing public project key, never a service-role credential.
+      EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_P0c1JB0dFOICwntFalOxOw_wetxrArJ
+      EXPO_PUBLIC_ATLAS_API_URL: https://atlas-os-preview-git-feature-nativ-0c2292-libing-hongs-projects.vercel.app
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4, verified commit
+        with:
+          persist-credentials: false
+      - name: Require safely configured test credentials before any build
+        id: credentials
+        env:
+          ATLAS_PREVIEW_TEST_EMAIL: ${{ secrets.ATLAS_PREVIEW_TEST_EMAIL }}
+          ATLAS_PREVIEW_TEST_PASSWORD: ${{ secrets.ATLAS_PREVIEW_TEST_PASSWORD }}
+        run: python3 scripts/android-school-read-e2e.py --preflight
+      - name: Verify standard runner KVM before building
+        if: steps.credentials.outputs.ready == 'true'
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules >/dev/null
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          sudo udevadm settle --timeout=15
+          python3 - <<'PY'
+          import fcntl, os, stat, sys
+          try:
+              mode = os.stat('/dev/kvm').st_mode
+              assert stat.S_ISCHR(mode) and os.access('/dev/kvm', os.R_OK | os.W_OK)
+              descriptor = os.open('/dev/kvm', os.O_RDWR)
+              try:
+                  assert fcntl.ioctl(descriptor, 0xAE00, 0) == 12
+              finally:
+                  os.close(descriptor)
+          except Exception:
+              print('BLOCKED KVM_UNAVAILABLE')
+              sys.exit(2)
+          print('PASS KVM_API_12')
+          PY
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4, verified commit
+        with:
+          node-version: 22.13.1
+          cache: npm
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4, verified commit
+        with:
+          distribution: temurin
+          java-version: "17"
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: node --import tsx --test tests/*.test.ts
+      - name: Validate Expo dependencies before building
+        run: npm run config:check
+      - run: npx expo prebuild --no-install --platform android
+      - name: Check Python syntax before emulator setup
+        run: python3 -m py_compile scripts/android-start-emulator.py scripts/android-profile-e2e.py scripts/android-school-read-e2e.py
+      - name: Check keyboard and button automation regressions
+        run: python3 -m unittest discover -s scripts/tests -p 'android_profile_automation_test.py'
+      - name: Prepare official Android SDK and fixed AVD without credentials
+        run: |
+          # Use one explicit registry for avdmanager and both emulator launches.
+          export ANDROID_USER_HOME="$RUNNER_TEMP/atlas-android-user"
+          export ANDROID_EMULATOR_HOME="$ANDROID_USER_HOME"
+          export ANDROID_AVD_HOME="$ANDROID_USER_HOME/avd"
+          mkdir -p "$ANDROID_AVD_HOME"
+          printf 'ANDROID_USER_HOME=%s\nANDROID_EMULATOR_HOME=%s\nANDROID_AVD_HOME=%s\n' "$ANDROID_USER_HOME" "$ANDROID_EMULATOR_HOME" "$ANDROID_AVD_HOME" >> "$GITHUB_ENV"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install 'platform-tools' 'emulator' 'system-images;android-35;google_apis;x86_64' >/dev/null
+          printf 'no\n' | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --force --name atlas_profile_acceptance --package 'system-images;android-35;google_apis;x86_64' --device pixel_6 --path "$RUNNER_TEMP/atlas-profile-avd" >/dev/null
+          python3 - <<'PY'
+          import os, subprocess, sys
+          from pathlib import Path
+          try:
+              registry = Path(os.environ['ANDROID_AVD_HOME']) / 'atlas_profile_acceptance.ini'
+              entries = [line.split('=', 1) for line in registry.read_text().splitlines() if '=' in line]
+              if sum(key == 'path' for key, _ in entries) != 1:
+                  raise RuntimeError()
+              values = dict(entries)
+              expected = Path(os.environ['RUNNER_TEMP']) / 'atlas-profile-avd'
+              if Path(values.get('path', '')).resolve() != expected.resolve() or not (expected / 'config.ini').is_file():
+                  raise RuntimeError()
+              result = subprocess.run([str(Path(os.environ['ANDROID_HOME']) / 'emulator' / 'emulator'), '-list-avds'],
+                                      capture_output=True, timeout=15, check=False)
+              if result.returncode != 0 or b'atlas_profile_acceptance' not in result.stdout.splitlines():
+                  raise RuntimeError()
+          except Exception:
+              print('BLOCKED AVD_REGISTRY_MISMATCH')
+              sys.exit(2)
+          print('PASS AVD_REGISTERED')
+          PY
+      - name: Preflight emulator boot before building without credentials
+        id: emulator-preflight
+        run: python3 scripts/android-start-emulator.py --preflight --expected-branch refs/heads/feature/native-school-applications-v1
+      - name: Build bundled release for the x86_64 emulator
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon --max-workers=2 -PreactNativeArchitectures=x86_64
+      - name: Start official emulator without credentials or persisted logs
+        id: emulator-start
+        run: python3 scripts/android-start-emulator.py --expected-branch refs/heads/feature/native-school-applications-v1
+      - name: Read empty school plans through normal Android login
+        # These credentials are absent from SDK setup and the emulator process.
+        env:
+          ATLAS_PREVIEW_TEST_EMAIL: ${{ secrets.ATLAS_PREVIEW_TEST_EMAIL }}
+          ATLAS_PREVIEW_TEST_PASSWORD: ${{ secrets.ATLAS_PREVIEW_TEST_PASSWORD }}
+        run: python3 scripts/android-school-read-e2e.py --apk android/app/build/outputs/apk/release/app-release.apk
+      - name: Stop ephemeral emulator
+        if: >-
+          always() &&
+          ((steps.emulator-preflight.outcome != 'skipped' && steps.emulator-preflight.outcome != '') ||
+          (steps.emulator-start.outcome != 'skipped' && steps.emulator-start.outcome != ''))
+        run: '"$ANDROID_HOME/platform-tools/adb" -s emulator-5554 emu kill >/dev/null 2>&1 || true'
+      # No upload-artifact, screenshot, UI XML, credential file, raw logcat or
+      # post-login recording. Only allowlisted check results enter the summary.

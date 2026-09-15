@@ -1,5 +1,12 @@
 # Student Preview email setup — 2026-09-15
 
+**Superseded entry-point warning:** Later investigation found this report's
+original Vercel deployment used the shared Supabase URL. Its old registration
+URL must not be used. The SMTP/template observations below remain historical
+configuration evidence, not proof of delivery or runtime isolation. See
+`2026-09-15-preview-connection-investigation.md` for the branch-only repair,
+replacement deployment and current verification boundary.
+
 Scope: isolated Supabase `atlas-student-preview` (`efvpndayardwjqtwtdmx`).
 No production website source, production database, existing mail keys, DNS,
 Vercel settings or paid subscriptions were modified.

@@ -14,7 +14,9 @@ Added a protected native profile route and Chinese/English three-step form, revi
 
 Draft inputs remain available after validation or failed saves. An ambiguous network outcome requires reading and comparing the server version before another write. Leaving a page with an unresolved save does not imply the server write was cancelled. Unsaved-change confirmation remains visible even when a refreshed request returns 401/403. Language errors retain row numbers, unknown existing choices remain visible, and notices scroll into view.
 
-The backend companion is the Atlas-OS native profile patch based on `8c2c164bf256295577ed1cea2879d801d13dd879`. The currently deployed API does not yet include this new route. The frontend alone does not complete hosted native acceptance.
+The backend companion is Atlas-OS draft PR #43, commit `cb85fcbcaeef3c9cce35c00e0044239ff5019ac1`, based on `8c2c164bf256295577ed1cea2879d801d13dd879`. Its dedicated Preview branch has the six reviewed configuration values bound to the isolated Student Preview project. Deployment `dpl_BfBRRLouqSbY2XaNvuyupD8jDXzz` became READY with the profile route; a missing-token request returned 401, which is not proof of authenticated environment or data access. The new branch origin is separately allowlisted as an exact pair in Mobile and used by internal smoke CI. The frontend alone does not complete hosted native acceptance.
+
+The legacy Preview health route returned 500 `preview_catalog_import_failed`. Source inspection found that this GET can import catalog rows before checking counts, so it must not be repeated as a read-only diagnostic. A failure does not establish whether partial import writes occurred. No recommendation generation was called. Both AI generation flags were overridden to false only for the new branch. Profile and current-matters do not depend on this catalog import path; catalog readiness remains a separate unresolved gate.
 
 ## Verification so far
 
@@ -24,6 +26,7 @@ The backend companion is the Atlas-OS native profile patch based on `8c2c164bf25
 - Backend full local suite: 279/279 passed; 13 profile behavior tests, lint, typecheck, UI audit and Next build passed. The literal backend test:ci command encountered the runtime's tsx IPC EPERM limitation; the same complete test set passed under Node's tsx import runner.
 - Independent UX review: five interaction issues and one permission-error navigation dead end corrected. Review was source-based, not a human device session.
 - A free standard public-repository Android CI job is prepared for this exact feature branch. It builds a bundled x86_64 release and checks fresh offline Chinese sign-in, registration-mode navigation and force-stop/reopen. It enters no credentials, submits no registration, uploads no APK and retains only smoke evidence for one day. Actual result must be recorded after execution.
+- First real CI run `34997709876`, source `fe979353ebe14c63c18a76f47da91e0d292c5288`: all 92 tests, typecheck, lint, prebuild and Release assembly passed. Gradle completed in 8m55s. KVM preparation then failed; the emulator step was skipped and no native screen evidence exists for that run. The revised runner checks actual KVM availability before the expensive build, waits for udev rules and retains nonsecret diagnostics. It does not downgrade the requirement or weaken screen assertions.
 
 ## Unpassed gates
 

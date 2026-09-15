@@ -31,6 +31,11 @@ export function Button({ label, onPress, disabled = false }: {
     <Text style={styles.buttonText}>{label}</Text>
   </Pressable>;
 }
+export function TextButton({ label, onPress }: { label: string; onPress: () => void }) {
+  return <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.textButton, pressed && styles.pressed]}>
+    <Text style={styles.textButtonText}>{label}</Text>
+  </Pressable>;
+}
 export const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: tokens.color.background },
   content: { padding: tokens.space.lg, paddingBottom: tokens.space.xxl, gap: tokens.space.md, maxWidth: 640, width: '100%', alignSelf: 'center' },
@@ -43,6 +48,8 @@ export const styles = StyleSheet.create({
   disabled: { backgroundColor: tokens.color.muted },
   pressed: { opacity: 0.8 },
   buttonText: { color: '#ffffff', fontSize: 16, fontWeight: '600', textAlign: 'center' },
+  textButton: { minHeight: tokens.touchTarget, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.md },
+  textButtonText: { color: tokens.color.primary, fontSize: 16, fontWeight: '600', textAlign: 'center' },
   input: { minHeight: tokens.touchTarget, borderWidth: 1, borderColor: tokens.color.line, borderRadius: tokens.radius.sm, padding: tokens.space.md, fontSize: 16, color: tokens.color.ink, backgroundColor: tokens.color.surface },
   row: { paddingVertical: tokens.space.md, borderBottomWidth: 1, borderBottomColor: tokens.color.line, gap: tokens.space.sm },
 });

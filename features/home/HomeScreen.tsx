@@ -1,10 +1,12 @@
 import { Body, Heading, Screen } from '../../components/ui';
 import { CurrentMatterShell } from '../current-matters/CurrentMatterShell';
+import { useI18n } from '../../lib/i18n/I18nProvider';
 export default function HomeScreen() {
-  return <Screen title="Your next step" subtitle="One thing at a time.">
+  const { t } = useI18n();
+  return <Screen title={t('nextStep')} subtitle={t('oneAtATime')}>
     <CurrentMatterShell />
-    <Heading>Next</Heading><Body>Upcoming steps will follow your current matter.</Body>
-    <Heading>Progress</Heading><Body>Your latest Atlas journey is loaded from Student Preview.</Body>
-    <Heading>Notifications</Heading><Body>Notifications are not available in this preview.</Body>
+    <Heading>{t('next')}</Heading><Body>{t('upcoming')}</Body>
+    <Heading>{t('progress')}</Heading><Body>{t('progressBody')}</Body>
+    <Heading>{t('notifications')}</Heading><Body>{t('notificationsBody')}</Body>
   </Screen>;
 }

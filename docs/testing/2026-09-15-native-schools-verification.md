@@ -1,6 +1,6 @@
 # Native school plan and application flow
 
-Status: NOT READY for phone distribution. New authenticated Android acceptance is pending.
+Status: NOT READY for phone distribution. Authenticated Android empty-school-plan read-only acceptance passed; application-creation acceptance remains NOT RUN.
 
 ## Current persisted candidate
 
@@ -8,9 +8,11 @@ Mobile source: `30a6ea21fecdaa4cca782de2f2139e03e8a8d786`, draft [Atlas-Mobile P
 
 [Mobile foundation run 35033339899](https://github.com/libing-hong/Atlas-Mobile/actions/runs/35033339899) completed successfully for this exact source after the Expo patch correction: clean install, TypeScript, lint, all 113 tests, online Expo configuration/dependency validation, Android and iOS bundle exports, and both native prebuilds. This resolves the previous dependency gate; it is not an on-device iOS acceptance result.
 
-[Android school-plan read run 35033336540](https://github.com/libing-hong/Atlas-Mobile/actions/runs/35033336540) is in progress at this checkpoint. It has passed credentials preflight, code checks, Expo validation and all 12 Python automation regressions. No Android UI PASS is claimed before its final result. The source is fixed to the candidate above; later documentation-only commits do not change the tested app.
+[Android school-plan read run 35033336540](https://github.com/libing-hong/Atlas-Mobile/actions/runs/35033336540), attempt 1, completed successfully. Job `104596678952` and its normal Android login/read step both succeeded. The final report at `2026-09-15T23:12:23.8492621Z` records **13/13 PASS** and **8 NOT_RUN**. The independent test reviewer re-fetched the run metadata, job status and allowlisted report on 2026-09-17 and matched the exact source above and APK SHA-256 `0f91aebf29ebada6c0a62ab59291e494898370579bbeb2f9405c2ddf506da54d`. See the [safe JSON evidence](2026-09-15-authenticated-school-read-pass.json). Later documentation-only commits do not change the tested app.
 
-The existing Student Preview service key remains masked and has not been copied. A Vercel Secret draft is prepared only for `feature/native-school-applications-v1`, with Production deselected and no value entered or saved. Browser confirmation rules require specific approval before granting the new backend this high-privilege credential. This configuration prerequisite blocks live application-creation acceptance, not the read-only Android run.
+At the 2026-09-17 evidence checkpoint, the user has explicitly approved saving the existing Student Preview service key to the Vercel configuration for `feature/native-school-applications-v1` only. Production remains outside this authorization. The coordinator is handling that configuration; the key has not yet been saved or its branch binding verified at this checkpoint. Approval is obtained, so pending configuration must not be described as pending user permission. This prerequisite blocks live application-creation acceptance, not the completed read-only Android run.
+
+The Supabase browser session has been restored through its secure GitHub sign-in. Vercel displays a new account-level 2FA setup prompt. Automatic approval review rejected the action to skip that prompt because declining account security setup is outside the test-secret authorization. No workaround was attempted; the existing key remains unrevealed and unsaved. The account owner needs to handle that security prompt before the authorized configuration can continue. No new deployment or database write occurred at this checkpoint. A fresh read-only query still found one designated test account and zero recommendations, discoveries and applications for it.
 
 ## Implemented scope
 
@@ -47,12 +49,27 @@ The first Android run, [35032265963](https://github.com/libing-hong/Atlas-Mobile
 
 Run [35032689657](https://github.com/libing-hong/Atlas-Mobile/actions/runs/35032689657), source `664ca082580b6b442beb85611c8d636724911116`, passed emulator preflight and reached the native build. It was deliberately cancelled before UI acceptance when the companion foundation run found that Expo's current compatibility metadata requires patch 57.0.23 instead of pinned 57.0.22. The dependency gate is preserved and now also runs before the Android build. App source and dependency changes trigger fresh Android acceptance; documentation-only changes do not. This cancelled run is not a PASS.
 
-The patch correction updates only Expo 57.0.23 and its required CLI 57.0.25, router-server 57.0.10 and babel-preset-expo 57.0.12 lock entries. React Native, React and unrelated dependencies remain pinned. The new candidate needs its own CI and Android result; earlier dependency checks do not substitute for that result.
+The patch correction updates only Expo 57.0.23 and its required CLI 57.0.25, router-server 57.0.10 and babel-preset-expo 57.0.12 lock entries. React Native, React and unrelated dependencies remain pinned. This corrected candidate now has its own successful foundation and Android read-only results above; those results do not establish application-creation acceptance.
 
 ## Acceptance boundary
 
 The new Android script tests normal UI login, account identity, Chinese/English empty application and school-plan states, return navigation, cold restart, final sign-out and emulator-session removal. It does not seed data or write business records. Only allowlisted result JSON is persisted; no authenticated screenshots, UI XML, credentials or raw logs are published.
 
-Adding a real or clearly marked synthetic programme, duplicate persistence, detail/readback, partial initialization in the hosted environment, token refresh during an actual pending write, cross-user data isolation and ARM phone behavior remain NOT RUN. An empty-plan PASS must never be reported as application-creation acceptance.
+The 13 passing checks are credential preflight, bundled release verification, Android login, account identity, Chinese empty applications, Chinese empty school plan, return to applications, English empty applications, English empty school plan, restoring Chinese, cold-start school-plan readback, final sign-out and emulator-session removal. These are actual emulator UI results, not an extrapolation from local controller tests.
+
+The report explicitly retains these eight unexecuted checks:
+
+| Check | Result |
+| --- | --- |
+| Add application | NOT_RUN |
+| Duplicate application persistence | NOT_RUN |
+| Application detail | NOT_RUN |
+| Same-user token refresh during a pending write | NOT_RUN |
+| Cross-user isolation | NOT_RUN |
+| Real school quality | NOT_RUN |
+| Material upload | NOT_RUN |
+| Physical ARM device | NOT_RUN |
+
+Hosted partial initialization and write-result recovery also remain unverified. An empty-plan PASS must never be reported as application-creation acceptance or full Web parity. The app remains NOT READY for distribution.
 
 Do not redistribute a previous APK as this candidate. The eventual release needs its exact bundle, signature, package/version upgrade behavior and artifact hash verified after the relevant business flows pass.

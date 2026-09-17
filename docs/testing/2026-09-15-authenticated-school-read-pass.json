@@ -1,0 +1,111 @@
+{
+  "date": "2026-09-15",
+  "independentlyVerifiedOn": "2026-09-17",
+  "repository": "libing-hong/Atlas-Mobile",
+  "branch": "feature/native-school-applications-v1",
+  "runId": 35033336540,
+  "runAttempt": 1,
+  "jobId": 104596678952,
+  "runUrl": "https://github.com/libing-hong/Atlas-Mobile/actions/runs/35033336540",
+  "runConclusion": "success",
+  "jobConclusion": "success",
+  "reportTimestamp": "2026-09-15T23:12:23.8492621Z",
+  "device": "Android API 35 x86_64 emulator",
+  "apkSha256": "0f91aebf29ebada6c0a62ab59291e494898370579bbeb2f9405c2ddf506da54d",
+  "checks": [
+    {
+      "check": "credentials_preflight",
+      "status": "PASS"
+    },
+    {
+      "check": "release_package",
+      "status": "PASS"
+    },
+    {
+      "check": "android_login",
+      "status": "PASS"
+    },
+    {
+      "check": "account_identity",
+      "status": "PASS"
+    },
+    {
+      "check": "applications_empty_zh",
+      "status": "PASS"
+    },
+    {
+      "check": "school_plan_empty_zh",
+      "status": "PASS"
+    },
+    {
+      "check": "return_to_applications",
+      "status": "PASS"
+    },
+    {
+      "check": "applications_empty_en",
+      "status": "PASS"
+    },
+    {
+      "check": "school_plan_empty_en",
+      "status": "PASS"
+    },
+    {
+      "check": "chinese_restored",
+      "status": "PASS"
+    },
+    {
+      "check": "cold_restart_school_plan",
+      "status": "PASS"
+    },
+    {
+      "check": "final_sign_out",
+      "status": "PASS"
+    },
+    {
+      "check": "emulator_session_removed",
+      "status": "PASS"
+    },
+    {
+      "check": "add_application",
+      "status": "NOT_RUN"
+    },
+    {
+      "check": "duplicate_application",
+      "status": "NOT_RUN"
+    },
+    {
+      "check": "application_detail",
+      "status": "NOT_RUN"
+    },
+    {
+      "check": "same_user_token_refresh_during_write",
+      "status": "NOT_RUN"
+    },
+    {
+      "check": "cross_user_isolation",
+      "status": "NOT_RUN"
+    },
+    {
+      "check": "real_school_quality",
+      "status": "NOT_RUN"
+    },
+    {
+      "check": "material_upload",
+      "status": "NOT_RUN"
+    },
+    {
+      "check": "physical_arm_device",
+      "status": "NOT_RUN"
+    }
+  ],
+  "scope": "authenticated_empty_school_plan_read_only",
+  "sourceSha": "30a6ea21fecdaa4cca782de2f2139e03e8a8d786",
+  "status": "PASS",
+  "releaseReadiness": "NOT_READY",
+  "limits": [
+    "Authenticated empty-school-plan read-only story only; not application creation or full Web parity.",
+    "No school fixture was created, no programme was added, and no profile edit was attempted by this script.",
+    "An empty-plan PASS does not validate hosted write authority, duplicate persistence, application detail, or initialization.",
+    "No authenticated screenshots, UI XML, credentials, raw logs, or APK are included in this evidence."
+  ]
+}

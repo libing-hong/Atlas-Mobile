@@ -5,6 +5,7 @@ The HTTP sidecar uses normal password auth for GET-only corroboration; it never
 creates an application or injects a token into the app. All identities, tokens
 and UI hierarchies stay in memory. The coordinator owns fixture DB cleanup.
 """
+# SDK 57 compatibility rerun: expo .24, constants .19 and router .22.
 import argparse
 import importlib.util
 import json

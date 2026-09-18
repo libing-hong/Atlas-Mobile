@@ -1,6 +1,18 @@
 # Native school plan and application flow
 
-Status: NOT READY for phone distribution. Authenticated Android empty-school-plan read-only acceptance passed; application-creation acceptance remains NOT RUN.
+Status: NOT READY for phone distribution. Android empty-plan reads and the hosted synthetic application API flow passed. Android application-creation UI acceptance still requires its own run.
+
+## 2026-09-18 hosted acceptance
+
+The fixed new Preview deployment passed [24 authenticated/read-boundary checks](https://github.com/libing-hong/Atlas-Mobile/actions/runs/35389861984) at mobile test source `aa0c61abdc7e377f09aa445612c5e4c27603d0dd`. Ordinary password sign-in, account binding, six resources, Chinese response language, journey consistency and local-session sign-out passed. Missing and invalid bearer tokens were refused on all six resources.
+
+The separate [synthetic application API run](https://github.com/libing-hong/Atlas-Mobile/actions/runs/35390591409), source `49ac849177979758778fb55fa19f9997bdf1c3b2`, passed 17 checks. It created one application through the same mobile selection route used by the app, then submitted the identical selection again. The duplicate returned the same application, with `created=false`; detail, list and plan membership readbacks agreed and the full public application DTO stayed unchanged. No request was sent to a school.
+
+The coordinator independently confirmed one owned planning application, pending catalogue status, the expected final evidence snapshot, zero persisted materials/requirements, zero ingestion and zero journey tasks. Four virtual missing-material slots are not completed materials. This was a visibly labelled synthetic record with an `.invalid` URL, not evidence of real-school data quality. The raw evidence snapshot was checked after both POSTs, not sampled before and after the duplicate.
+
+All five fixture row types were removed using a transaction that refused unexpected FK children. Subsequent reads confirmed zero fixture/application rows and unchanged profile/journey fingerprints. The database connector was read-only; fixture creation and cleanup used the already authenticated isolated project's SQL Editor. An initial editor replacement appended to the prior setup query; its empty-plan guard aborted without changes. Running the reviewed cleanup alone in a fresh query tab succeeded.
+
+See [safe machine-readable evidence](2026-09-18-hosted-school-acceptance.json). Neither this API PASS nor the previous empty-plan Android PASS establishes the native write UI, physical ARM compatibility, cross-user isolation, uploads, real recommendations or full Web journey parity. The next dedicated Android workflow also runs the complete project/configuration checks against the exact new Preview origin. Its configuration is added as one exact approved origin/project pair; other origins and Production remain rejected.
 
 ## 2026-09-18 configuration recovery
 
@@ -10,7 +22,7 @@ The existing backend source `d7dcbb6b1ec1bea9d1f293d9fcc011c41bee1914` was redep
 
 A fresh read-only database check found one designated test account and zero applications, recommendations and discoveries for that account. The cloud-browser handoff previously failed for the owner, but the secure login subsequently completed and the configuration was saved. There is no remaining request for permission to configure this key. Authenticated post-deployment acceptance and application creation still require their own evidence.
 
-The 2026-09-17 paragraphs below are historical checkpoints; the configuration block they describe has been resolved by this update.
+The configuration baseline and all older sections below are historical checkpoints. The hosted acceptance section above supersedes their service-key and synthetic-write NOT_RUN entries; native UI results must still be reported separately.
 
 ## Current persisted candidate
 

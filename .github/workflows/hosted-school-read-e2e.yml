@@ -1,0 +1,47 @@
+name: Hosted School API Read Acceptance
+
+on:
+  push:
+    branches: [feature/native-school-applications-v1]
+    paths:
+      - scripts/hosted-school-read-e2e.py
+      - scripts/tests/hosted_school_read_test.py
+      - .github/workflows/hosted-school-read-e2e.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: atlas-preview-designated-profile-account
+  cancel-in-progress: false
+
+jobs:
+  hosted-read:
+    if: >-
+      github.repository == 'libing-hong/Atlas-Mobile' &&
+      github.event.repository.visibility == 'public' &&
+      github.ref == 'refs/heads/feature/native-school-applications-v1' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Check syntax and offline request/privacy/session boundaries
+        run: |
+          python3 -m py_compile scripts/hosted-school-read-e2e.py
+          python3 -m unittest discover -s scripts/tests -p 'hosted_school_read_test.py'
+      - name: Read fixed Preview deployment through normal password authentication
+        env:
+          EXPO_PUBLIC_APP_ENV: preview
+          EXPO_PUBLIC_ATLAS_API_URL: https://atlas-os-preview-efevbscqm-libing-hongs-projects.vercel.app
+          EXPO_PUBLIC_SUPABASE_URL: https://efvpndayardwjqtwtdmx.supabase.co
+          EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_P0c1JB0dFOICwntFalOxOw_wetxrArJ
+          ATLAS_PREVIEW_TEST_EMAIL: ${{ secrets.ATLAS_PREVIEW_TEST_EMAIL }}
+          ATLAS_PREVIEW_TEST_PASSWORD: ${{ secrets.ATLAS_PREVIEW_TEST_PASSWORD }}
+        run: python3 scripts/hosted-school-read-e2e.py
+      # No APK, emulator, npm install, artifacts, raw bodies, tokens or UI data.
+      # Local-scope logout runs inside the script's finally block, not another
+      # process needing a persisted token. A cleanup failure never yields PASS.

@@ -34,3 +34,13 @@ test('partial, privileged and unapproved public credentials are refused', () => 
     assert.throws(() => readConfig({ supabaseUrl: 'https://example.com', publishableKey }));
   }
 });
+test('fixed school acceptance deployment requires the isolated Preview pair', () => {
+  const input = { environment: 'preview', supabaseUrl: 'https://efvpndayardwjqtwtdmx.supabase.co',
+    publishableKey: 'sb_publishable_test',
+    apiUrl: 'https://atlas-os-preview-efevbscqm-libing-hongs-projects.vercel.app' };
+  assert.equal(readConfig(input).api?.url, input.apiUrl);
+  assert.throws(() => readConfig({ ...input, environment: 'production' }));
+  assert.throws(() => readConfig({ ...input, supabaseUrl: 'https://unapproved.supabase.co' }));
+  assert.throws(() => readConfig({ ...input, apiUrl: input.apiUrl + '/api' }));
+  assert.throws(() => readConfig({ ...input, apiUrl: input.apiUrl.replace('efevbscqm', 'unapproved') }));
+});

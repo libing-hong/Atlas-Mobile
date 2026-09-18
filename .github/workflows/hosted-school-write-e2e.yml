@@ -1,0 +1,53 @@
+name: Hosted Synthetic School Application Write Acceptance
+
+on:
+  push:
+    branches: [feature/native-school-applications-v1]
+    paths:
+      - scripts/hosted-school-write-e2e.py
+      - scripts/tests/hosted_school_write_test.py
+      - .github/workflows/hosted-school-write-e2e.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: atlas-preview-designated-profile-account
+  cancel-in-progress: false
+
+jobs:
+  hosted-write:
+    if: >-
+      github.repository == 'libing-hong/Atlas-Mobile' &&
+      github.event.repository.visibility == 'public' &&
+      github.ref == 'refs/heads/feature/native-school-applications-v1' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Check syntax and offline write/privacy boundaries
+        run: |
+          python3 -m py_compile scripts/hosted-school-read-e2e.py scripts/hosted-school-write-e2e.py
+          python3 -m unittest discover -s scripts/tests -p 'hosted_school_write_test.py'
+      - name: Verify only the coordinator-seeded synthetic pending discovery
+        env:
+          EXPO_PUBLIC_APP_ENV: preview
+          EXPO_PUBLIC_ATLAS_API_URL: https://atlas-os-preview-efevbscqm-libing-hongs-projects.vercel.app
+          EXPO_PUBLIC_SUPABASE_URL: https://efvpndayardwjqtwtdmx.supabase.co
+          EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_P0c1JB0dFOICwntFalOxOw_wetxrArJ
+          ATLAS_E2E_FIXTURE_ENABLED: 'true'
+          ATLAS_E2E_FIXTURE_MARKER: atlas-native-pending-20260918-v1
+          ATLAS_E2E_FIXTURE_RUN_ID: 24a7784d-f32e-49e9-b89b-0d74d2bf55ad
+          ATLAS_E2E_FIXTURE_DISCOVERY_ID: 74f728e4-dfb9-4122-9aa6-d70cf836f1a6
+          ATLAS_E2E_FIXTURE_KIND: discovery
+          ATLAS_E2E_FIXTURE_STATUS: current
+          ATLAS_PREVIEW_TEST_EMAIL: ${{ secrets.ATLAS_PREVIEW_TEST_EMAIL }}
+          ATLAS_PREVIEW_TEST_PASSWORD: ${{ secrets.ATLAS_PREVIEW_TEST_PASSWORD }}
+        run: python3 scripts/hosted-school-write-e2e.py
+      # No DB/AI keys, raw responses, PII, IDs, tokens, uploads or APK artifacts.
+      # The script revokes only its own auth session; root separately verifies
+      # DB counts and executes guarded fixture cleanup. Neither is a release gate.

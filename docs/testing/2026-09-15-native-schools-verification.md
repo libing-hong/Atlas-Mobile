@@ -16,6 +16,10 @@ See [safe machine-readable evidence](2026-09-18-hosted-school-acceptance.json). 
 
 ## 2026-09-18 configuration recovery
 
+The first dedicated Android write attempt, [35391445657](https://github.com/libing-hong/Atlas-Mobile/actions/runs/35391445657), source `0fb97aaf8eb5a6b51026e0a174189ff96ff4e9f0`, passed credential preflight, KVM, TypeScript, lint and all 114 tests, including the fixed-origin pair restriction. The online Expo compatibility gate then required `expo ~57.0.24`, `expo-constants ~57.0.19` and `expo-router ~57.0.22`. It stopped before APK build, emulator login or any UI write. This is a failed build gate, not Android acceptance. The fixture was still one current synthetic discovery and zero applications when the run started.
+
+The correction pins these three exact patches to `57.0.24`, `57.0.19` and `57.0.22`. The npm-generated lock also updates required Expo CLI/asset/metro-runtime/UI packages, plus five permitted resolver updates in the affected subtree: material-symbols `0.4.48`, xcpretty `4.4.5`, compression `1.8.2`, nanoid `3.3.19` and react-is `19.3.0`. React itself remains `19.2.3`, React Native remains `0.86.3`, and all other top-level pins stay unchanged. An isolated `npm ci --ignore-scripts` reproduced the lock. The local online Expo check encountered a proxy timeout; it is not a PASS, and the unchanged online CI gate must pass on the corrected source. The native harness changes only by a rerun comment; its Python AST is unchanged.
+
 The approved Student Preview server key was saved successfully in Vercel as a **Secret**, scoped only to Preview branch `feature/native-school-applications-v1`. Its project and role were checked against `efvpndayardwjqtwtdmx` and `service_role` before saving. The value was not printed, committed, or included in the app. Vercel's saved row confirms the exact branch scope. Production settings, production deployments, database grants and website source were not changed.
 
 The existing backend source `d7dcbb6b1ec1bea9d1f293d9fcc011c41bee1914` was redeployed with the updated configuration. Deployment `dpl_CRiG7zKcshuCL24GF7NAt8BoEZGR` is **READY**, target Preview, at `https://atlas-os-preview-efevbscqm-libing-hongs-projects.vercel.app`. Its existing branch alias now points to this deployment. The unauthenticated `/api/mobile/v1/me` request returned HTTP 401 `UNAUTHENTICATED` with `private, no-store` caching. This boundary check does not prove an authenticated write works.
@@ -95,3 +99,13 @@ The report explicitly retains these eight unexecuted checks:
 Hosted partial initialization and write-result recovery also remain unverified. An empty-plan PASS must never be reported as application-creation acceptance or full Web parity. The app remains NOT READY for distribution.
 
 Do not redistribute a previous APK as this candidate. The eventual release needs its exact bundle, signature, package/version upgrade behavior and artifact hash verified after the relevant business flows pass.
+
+## Remaining delivery gaps from source review
+
+The experience reviewer identified five concrete gaps beyond the synthetic application flow. These are source findings, not a human/device experience session:
+
+- `features/schools/SchoolPlanScreen.tsx` reads existing plans but offers no free catalogue search or generation path for a new user's empty plan. Real catalogue selection and evidence need their own end-to-end acceptance.
+- `features/applications/ApplicationDetailScreen.tsx` displays materials but does not upload them. File selection, authenticated storage, replacement and next-step refresh are unverified/unimplemented in this screen.
+- `features/journey/JourneyScreen.tsx` and `lib/navigation/actions.ts` do not provide the complete native Offer, visa, pre-departure and arrival action flow available on Web.
+- `features/auth/SignInScreen.tsx` has sign-up/sign-in but lacks resend-verification and password-recovery UI. Expired email verification and forgotten-password recovery remain open.
+- `.github/workflows/android-preview-apk.yml` still targets the older profile branch/API. It is not this candidate's delivery path; any future phone APK must bind the accepted source/backend, include ARM support, and verify signing, upgrade, cold-start and background recovery.

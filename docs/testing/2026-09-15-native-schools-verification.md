@@ -2,6 +2,16 @@
 
 Status: NOT READY for phone distribution. Authenticated Android empty-school-plan read-only acceptance passed; application-creation acceptance remains NOT RUN.
 
+## 2026-09-18 configuration recovery
+
+The approved Student Preview server key was saved successfully in Vercel as a **Secret**, scoped only to Preview branch `feature/native-school-applications-v1`. Its project and role were checked against `efvpndayardwjqtwtdmx` and `service_role` before saving. The value was not printed, committed, or included in the app. Vercel's saved row confirms the exact branch scope. Production settings, production deployments, database grants and website source were not changed.
+
+The existing backend source `d7dcbb6b1ec1bea9d1f293d9fcc011c41bee1914` was redeployed with the updated configuration. Deployment `dpl_CRiG7zKcshuCL24GF7NAt8BoEZGR` is **READY**, target Preview, at `https://atlas-os-preview-efevbscqm-libing-hongs-projects.vercel.app`. Its existing branch alias now points to this deployment. The unauthenticated `/api/mobile/v1/me` request returned HTTP 401 `UNAUTHENTICATED` with `private, no-store` caching. This boundary check does not prove an authenticated write works.
+
+A fresh read-only database check found one designated test account and zero applications, recommendations and discoveries for that account. The cloud-browser handoff previously failed for the owner, but the secure login subsequently completed and the configuration was saved. There is no remaining request for permission to configure this key. Authenticated post-deployment acceptance and application creation still require their own evidence.
+
+The 2026-09-17 paragraphs below are historical checkpoints; the configuration block they describe has been resolved by this update.
+
 ## Current persisted candidate
 
 Mobile source: `30a6ea21fecdaa4cca782de2f2139e03e8a8d786`, draft [Atlas-Mobile PR #5](https://github.com/libing-hong/Atlas-Mobile/pull/5).

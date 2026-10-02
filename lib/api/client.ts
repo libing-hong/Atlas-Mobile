@@ -1,4 +1,5 @@
 import { decodeProfileValues, safeProfileFields, type ProfileValues } from './profile-contract';
+import { decodeSelection, type Selection } from './selection-contract';
 export type ApiErrorCode = 'disabled' | 'unauthenticated' | 'forbidden' | 'http' |
   'network' | 'timeout' | 'cancelled' | 'invalid-response' | 'invalid-path';
 // Verified against Atlas-OS 8c2c164bf256295577ed1cea2879d801d13dd879:
@@ -6,6 +7,7 @@ export type ApiErrorCode = 'disabled' | 'unauthenticated' | 'forbidden' | 'http'
 const serverErrorCodes = new Set([
   'ACCESS_DENIED', 'UNAUTHENTICATED', 'RATE_LIMITED', 'DATA_UNAVAILABLE',
   'METHOD_NOT_ALLOWED', 'INVALID_REQUEST', 'PROFILE_REQUIRED', 'AUTH_UNAVAILABLE', 'PREVIEW_UNAVAILABLE', 'VALIDATION_ERROR',
+  'SELECTION_UNAVAILABLE', 'APPLICATION_NOT_FOUND',
 ]);
 type ErrorMetadata = { serverCode?: string; requestId?: string; fields?: string[] };
 function safeMetadata(value: unknown): ErrorMetadata {
@@ -39,7 +41,7 @@ type ClientOptions = {
 };
 export type ApiLocale = 'zh' | 'en';
 export function createApiClient(options: ClientOptions) {
-  async function request<T>(method: 'GET' | 'PUT', path: string, decode: (body: unknown) => T, signal: AbortSignal | undefined, locale: ApiLocale, body?: string, expectedUserId?: string): Promise<T> {
+  async function request<T>(method: 'GET' | 'PUT' | 'POST', path: string, decode: (body: unknown) => T, signal: AbortSignal | undefined, locale: ApiLocale, body?: string, expectedUserId?: string): Promise<T> {
       if (!options.enabled) throw new ApiError('disabled', 'Mobile services are not connected.');
       let base: URL;
       let url: URL;
@@ -70,7 +72,7 @@ export function createApiClient(options: ClientOptions) {
       try {
         const response = await (options.transport ?? fetch)(url.toString(), {
           method,
-          headers: { Accept: 'application/json', 'Accept-Language': locale === 'zh' ? 'zh-CN' : 'en', Authorization: 'Bearer ' + token, ...(method === 'PUT' ? { 'Content-Type': 'application/json' } : {}) },
+          headers: { Accept: 'application/json', 'Accept-Language': locale === 'zh' ? 'zh-CN' : 'en', Authorization: 'Bearer ' + token, ...(method !== 'GET' ? { 'Content-Type': 'application/json' } : {}) },
           ...(body !== undefined ? { body } : {}),
           signal: controller.signal,
           redirect: 'error',
@@ -117,16 +119,23 @@ export function createApiClient(options: ClientOptions) {
       }
   }
   return {
-    get<T>(path: string, decode: (body: unknown) => T, signal?: AbortSignal, locale: ApiLocale = 'zh') {
-      return request('GET', path, decode, signal, locale);
+    get<T>(path: string, decode: (body: unknown) => T, signal?: AbortSignal, locale: ApiLocale = 'zh', expectedUserId?: string) {
+      return request('GET', path, decode, signal, locale, undefined, expectedUserId);
     },
     async putProfile<T>(values: ProfileValues, decode: (body: unknown) => T, signal?: AbortSignal, locale: ApiLocale = 'zh', expectedUserId?: string) {
       if (!expectedUserId) throw new ApiError('unauthenticated', 'Sign in to save your profile.');
       let body: string;
       try { body = JSON.stringify(decodeProfileValues(values)); }
       catch { throw new ApiError('http', 'Invalid profile fields.', 422, { serverCode: 'VALIDATION_ERROR' }); }
-      // The only write offered by this client is the reviewed own-profile route.
+      // Each write has a fixed reviewed route and an explicitly bound owner.
       return request('PUT', '/api/mobile/v1/profile', decode, signal, locale, body, expectedUserId);
+    },
+    async postApplication<T>(selection: Selection, decode: (body: unknown) => T, signal?: AbortSignal, locale: ApiLocale = 'zh', expectedUserId?: string) {
+      if (!expectedUserId) throw new ApiError('unauthenticated', 'Sign in to add an application.');
+      let body: string;
+      try { body = JSON.stringify({ selection: decodeSelection(selection) }); }
+      catch { throw new ApiError('http', 'Invalid selection.', 422, { serverCode: 'VALIDATION_ERROR' }); }
+      return request('POST', '/api/mobile/v1/applications', decode, signal, locale, body, expectedUserId);
     },
   };
 }

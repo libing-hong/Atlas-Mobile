@@ -4,11 +4,11 @@ import type { ApiLocale } from '../api/client';
 // 8c2c164bf256295577ed1cea2879d801d13dd879, mobile-api/contracts.ts
 // and journey/types.ts. Core still owns status, ordering, and progression.
 const applicationLabels = {
-  planning: ['规划中', 'Planning'], preparing: ['准备中', 'Preparing'],
-  ready_to_submit: ['待提交', 'Ready to submit'], submitted: ['已提交', 'Submitted'],
+  planning: ['规划中', 'Planning'], preparing: ['准备材料', 'Preparing materials'],
+  ready_to_submit: ['待提交', 'Ready to submit'], submitted: ['官网申请进行中', 'Official application in progress'],
   supplement_required: ['需要补充材料', 'Additional materials needed'], waiting_result: ['等待结果', 'Awaiting result'],
   offer_received: ['已收到录取', 'Offer received'], accepted: ['已接受', 'Accepted'],
-  declined: ['已拒绝', 'Declined'], withdrawn: ['已撤回', 'Withdrawn'], closed: ['已结束', 'Closed'],
+  declined: ['未录取', 'Not admitted'], withdrawn: ['已撤回', 'Withdrawn'], closed: ['已结束', 'Closed'],
 } as const;
 const stageLabels = {
   study_profile: ['留学档案', 'Study profile'], school_plan: ['选校方案', 'School plan'],

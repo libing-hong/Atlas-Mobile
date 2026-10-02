@@ -1,0 +1,315 @@
+{
+  "date": "2026-09-18",
+  "releaseReadiness": "NOT_READY",
+  "configuration": {
+    "branch": "feature/native-school-applications-v1",
+    "deploymentId": "dpl_CRiG7zKcshuCL24GF7NAt8BoEZGR",
+    "backendSourceSha": "d7dcbb6b1ec1bea9d1f293d9fcc011c41bee1914",
+    "serverSecret": "SAVED_PREVIEW_BRANCH_ONLY",
+    "deployment": "READY"
+  },
+  "hostedRead": {
+    "workflowRun": 35389861984,
+    "job": 105745432301,
+    "report": {
+      "backendSourceSha": "d7dcbb6b1ec1bea9d1f293d9fcc011c41bee1914",
+      "checks": [
+        {
+          "check": "context",
+          "status": "PASS"
+        },
+        {
+          "check": "target",
+          "status": "PASS"
+        },
+        {
+          "check": "missing_bearer_me",
+          "status": "PASS"
+        },
+        {
+          "check": "missing_bearer_profile",
+          "status": "PASS"
+        },
+        {
+          "check": "missing_bearer_recommendations",
+          "status": "PASS"
+        },
+        {
+          "check": "missing_bearer_applications",
+          "status": "PASS"
+        },
+        {
+          "check": "missing_bearer_journey",
+          "status": "PASS"
+        },
+        {
+          "check": "missing_bearer_current-matters",
+          "status": "PASS"
+        },
+        {
+          "check": "invalid_bearer_me",
+          "status": "PASS"
+        },
+        {
+          "check": "invalid_bearer_profile",
+          "status": "PASS"
+        },
+        {
+          "check": "invalid_bearer_recommendations",
+          "status": "PASS"
+        },
+        {
+          "check": "invalid_bearer_applications",
+          "status": "PASS"
+        },
+        {
+          "check": "invalid_bearer_journey",
+          "status": "PASS"
+        },
+        {
+          "check": "invalid_bearer_current-matters",
+          "status": "PASS"
+        },
+        {
+          "check": "password_auth",
+          "status": "PASS"
+        },
+        {
+          "check": "auth_identity",
+          "status": "PASS"
+        },
+        {
+          "check": "read_me",
+          "status": "PASS"
+        },
+        {
+          "check": "read_profile",
+          "status": "PASS"
+        },
+        {
+          "check": "read_recommendations",
+          "status": "PASS"
+        },
+        {
+          "check": "read_applications",
+          "status": "PASS"
+        },
+        {
+          "check": "read_journey",
+          "status": "PASS"
+        },
+        {
+          "check": "read_current-matters",
+          "status": "PASS"
+        },
+        {
+          "check": "journey_consistency",
+          "status": "PASS"
+        },
+        {
+          "check": "session_logout_local",
+          "status": "PASS"
+        },
+        {
+          "check": "add_application",
+          "status": "NOT_RUN"
+        },
+        {
+          "check": "duplicate_application",
+          "status": "NOT_RUN"
+        },
+        {
+          "check": "application_detail",
+          "status": "NOT_RUN"
+        },
+        {
+          "check": "hosted_partial_initialization",
+          "status": "NOT_RUN"
+        },
+        {
+          "check": "same_user_token_refresh_during_write",
+          "status": "NOT_RUN"
+        },
+        {
+          "check": "cross_user_isolation",
+          "status": "NOT_RUN"
+        },
+        {
+          "check": "material_upload",
+          "status": "NOT_RUN"
+        },
+        {
+          "check": "physical_arm_device",
+          "status": "NOT_RUN"
+        },
+        {
+          "check": "server_write_capability",
+          "status": "NOT_RUN"
+        }
+      ],
+      "cleanup": "LOCAL_LOGOUT_CONFIRMED",
+      "deploymentId": "dpl_CRiG7zKcshuCL24GF7NAt8BoEZGR",
+      "releaseReadiness": "NOT_READY",
+      "scope": "authenticated_empty_hosted_api_reads",
+      "sourceSha": "aa0c61abdc7e377f09aa445612c5e4c27603d0dd",
+      "status": "PASS",
+      "targetUrl": "https://atlas-os-preview-efevbscqm-libing-hongs-projects.vercel.app"
+    }
+  },
+  "hostedSyntheticWrite": {
+    "workflowRun": 35390591409,
+    "job": 105747769730,
+    "report": {
+      "backendSourceSha": "d7dcbb6b1ec1bea9d1f293d9fcc011c41bee1914",
+      "checks": [
+        {
+          "check": "context",
+          "status": "PASS"
+        },
+        {
+          "check": "target",
+          "status": "PASS"
+        },
+        {
+          "check": "fixture_guard",
+          "status": "PASS"
+        },
+        {
+          "check": "password_auth",
+          "status": "PASS"
+        },
+        {
+          "check": "auth_identity",
+          "status": "PASS"
+        },
+        {
+          "check": "account_boundary",
+          "status": "PASS"
+        },
+        {
+          "check": "fixture_plan",
+          "status": "PASS"
+        },
+        {
+          "check": "empty_applications",
+          "status": "PASS"
+        },
+        {
+          "check": "first_add",
+          "status": "PASS"
+        },
+        {
+          "check": "first_detail",
+          "status": "PASS"
+        },
+        {
+          "check": "first_list",
+          "status": "PASS"
+        },
+        {
+          "check": "first_membership",
+          "status": "PASS"
+        },
+        {
+          "check": "duplicate_add",
+          "status": "PASS"
+        },
+        {
+          "check": "duplicate_detail",
+          "status": "PASS"
+        },
+        {
+          "check": "duplicate_list",
+          "status": "PASS"
+        },
+        {
+          "check": "duplicate_membership",
+          "status": "PASS"
+        },
+        {
+          "check": "session_logout_local",
+          "status": "PASS"
+        },
+        {
+          "check": "database_row_assertions",
+          "status": "NOT_RUN"
+        },
+        {
+          "check": "database_fixture_cleanup",
+          "status": "NOT_RUN"
+        },
+        {
+          "check": "positive_material_initialization",
+          "status": "NOT_RUN"
+        },
+        {
+          "check": "hosted_partial_initialization",
+          "status": "NOT_RUN"
+        },
+        {
+          "check": "cross_user_isolation",
+          "status": "NOT_RUN"
+        },
+        {
+          "check": "real_school_recommendation",
+          "status": "NOT_RUN"
+        },
+        {
+          "check": "native_ui",
+          "status": "NOT_RUN"
+        },
+        {
+          "check": "physical_arm_device",
+          "status": "NOT_RUN"
+        },
+        {
+          "check": "full_business_journey",
+          "status": "NOT_RUN"
+        }
+      ],
+      "fixtureCleanup": "REQUIRES_COORDINATOR",
+      "releaseReadiness": "NOT_READY",
+      "scope": "synthetic_pending_application_http_persistence",
+      "sessionCleanup": "LOCAL_LOGOUT_CONFIRMED",
+      "sourceSha": "49ac849177979758778fb55fa19f9997bdf1c3b2",
+      "status": "PASS",
+      "targetUrl": "https://atlas-os-preview-efevbscqm-libing-hongs-projects.vercel.app",
+      "writeState": "DUPLICATE_CONFIRMED"
+    }
+  },
+  "coordinatorVerification": {
+    "canonicalApplicationCount": 1,
+    "ownedApplicationCount": 1,
+    "status": "planning",
+    "formallySubmitted": false,
+    "programmeVerification": "pending",
+    "finalEvidenceSnapshotMatchesFixture": true,
+    "duplicatePublicDtoUnchanged": true,
+    "persistedMaterialCount": 0,
+    "virtualMissingMaterialSlots": 4,
+    "persistedRequirementCount": 0,
+    "journeyTaskCount": 0,
+    "ingestionCount": 0,
+    "profileUnchanged": true
+  },
+  "fixtureCleanup": {
+    "status": "PASS",
+    "applicationRows": 0,
+    "discoveryRows": 0,
+    "runRows": 0,
+    "programmeRows": 0,
+    "schoolRows": 0,
+    "profileUnchanged": true,
+    "journeyUnchanged": true
+  },
+  "limitations": [
+    "synthetic pending discovery only; no official admissions verification",
+    "API success does not establish native UI or physical ARM success",
+    "raw evidence snapshot was verified after duplicate, not sampled before and after",
+    "full journey, uploads, cross-user, refresh-during-write and partial initialization remain NOT_RUN"
+  ],
+  "notes": [
+    "Supabase connector is read-only; the existing signed-in isolated project SQL Editor created and cleaned the disposable fixture.",
+    "An initial cleanup editor replacement appended to the previous setup query; its empty-plan guard aborted with no changes. A fresh query tab then ran the reviewed cleanup successfully."
+  ]
+}

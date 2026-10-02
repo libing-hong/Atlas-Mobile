@@ -1,7 +1,9 @@
 """Regressions for actual Android selector/IME automation defects; no account data."""
 
 import importlib.util
+import json
 from pathlib import Path
+import tempfile
 import unittest
 from unittest.mock import patch
 import xml.etree.ElementTree as ET
@@ -10,6 +12,14 @@ SOURCE = Path(__file__).resolve().parents[2] / "scripts" / "android-profile-e2e.
 SPEC = importlib.util.spec_from_file_location("profile_acceptance", SOURCE)
 acceptance = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(acceptance)
+
+STARTER_SOURCE = SOURCE.with_name("android-start-emulator.py")
+STARTER_SPEC = importlib.util.spec_from_file_location("emulator_starter", STARTER_SOURCE)
+starter = importlib.util.module_from_spec(STARTER_SPEC)
+STARTER_SPEC.loader.exec_module(starter)
+
+PROFILE_BRANCH = "refs/heads/feature/native-team-first-flow-v1"
+SCHOOL_BRANCH = "refs/heads/feature/native-school-applications-v1"
 
 
 def ime_state(shown, service_view=True):
@@ -89,6 +99,68 @@ class ButtonRegression(unittest.TestCase):
         with self.assertRaises(acceptance.Failure) as result:
             device.tap_node(target)
         self.assertEqual(result.exception.code, "UI_ACTION_DISABLED")
+
+
+class EmulatorContextRegression(unittest.TestCase):
+    """Exercise the real startup guard, without SDK, subprocesses or credentials."""
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.event = Path(temporary.name) / "event.json"
+        self.event.write_text(json.dumps({"repository": {"visibility": "public"}}))
+        environment = patch.dict(starter.os.environ, {
+            "GITHUB_ACTIONS": "true",
+            "GITHUB_REPOSITORY": "libing-hong/Atlas-Mobile",
+            "GITHUB_REF": PROFILE_BRANCH,
+            "GITHUB_EVENT_PATH": str(self.event),
+        }, clear=True)
+        environment.start()
+        self.addCleanup(environment.stop)
+        platform = patch.object(starter.sys, "platform", "linux")
+        platform.start()
+        self.addCleanup(platform.stop)
+
+    def assert_invalid(self, *args):
+        with self.assertRaises(starter.StartFailure) as result:
+            starter.check_context(*args)
+        self.assertEqual(result.exception.kind, "INVALID_CONTEXT")
+
+    def test_original_profile_branch_remains_the_default(self):
+        self.assertIsNone(starter.check_context())
+
+    def test_school_branch_is_allowed_only_when_explicitly_selected(self):
+        starter.os.environ["GITHUB_REF"] = SCHOOL_BRANCH
+        self.assertIsNone(starter.check_context(SCHOOL_BRANCH))
+        self.assert_invalid()
+
+    def test_selected_branch_must_match_the_actual_ref(self):
+        for selected, actual in (
+                (SCHOOL_BRANCH, PROFILE_BRANCH), (PROFILE_BRANCH, SCHOOL_BRANCH),
+                (SCHOOL_BRANCH, "refs/pull/1/merge"), (SCHOOL_BRANCH, "refs/heads/main")):
+            with self.subTest(selected=selected, actual=actual):
+                starter.os.environ["GITHUB_REF"] = actual
+                self.assert_invalid(selected)
+
+    def test_an_unknown_branch_cannot_authorize_itself(self):
+        for unknown in ("refs/heads/unreviewed", "refs/heads/main", ""):
+            with self.subTest(branch=unknown):
+                starter.os.environ["GITHUB_REF"] = unknown
+                self.assert_invalid(unknown)
+
+    def test_either_test_credential_blocks_emulator_startup(self):
+        starter.os.environ["GITHUB_REF"] = SCHOOL_BRANCH
+        for name in ("ATLAS_PREVIEW_TEST_EMAIL", "ATLAS_PREVIEW_TEST_PASSWORD"):
+            with self.subTest(variable=name), patch.dict(starter.os.environ, {name: "offline-fixture"}):
+                self.assert_invalid(SCHOOL_BRANCH)
+
+    def test_non_public_or_invalid_event_is_rejected(self):
+        starter.os.environ["GITHUB_REF"] = SCHOOL_BRANCH
+        for event in ({"repository": {"visibility": "private"}},
+                      {"repository": {"visibility": "internal"}}, {}, "invalid-json"):
+            with self.subTest(event=event):
+                self.event.write_text(event if isinstance(event, str) else json.dumps(event))
+                self.assert_invalid(SCHOOL_BRANCH)
 
 
 if __name__ == "__main__":

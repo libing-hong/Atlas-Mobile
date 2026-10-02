@@ -35,11 +35,11 @@ jobs:
       EXPO_PUBLIC_SUPABASE_URL: https://efvpndayardwjqtwtdmx.supabase.co
       # Existing public project key, never a service-role credential.
       EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_P0c1JB0dFOICwntFalOxOw_wetxrArJ
-      EXPO_PUBLIC_ATLAS_API_URL: https://atlas-os-preview-efevbscqm-libing-hongs-projects.vercel.app
+      EXPO_PUBLIC_ATLAS_API_URL: https://atlas-os-preview-ajfb1kg2o-libing-hongs-projects.vercel.app
       ATLAS_E2E_FIXTURE_ENABLED: 'true'
-      ATLAS_E2E_FIXTURE_MARKER: atlas-native-pending-20260918-v1
-      ATLAS_E2E_FIXTURE_RUN_ID: 24a7784d-f32e-49e9-b89b-0d74d2bf55ad
-      ATLAS_E2E_FIXTURE_DISCOVERY_ID: 74f728e4-dfb9-4122-9aa6-d70cf836f1a6
+      ATLAS_E2E_FIXTURE_MARKER: atlas-native-pending-20260921-v2
+      ATLAS_E2E_FIXTURE_RUN_ID: 24a7784d-f32e-49e9-b89b-0d74d2bf55ae
+      ATLAS_E2E_FIXTURE_DISCOVERY_ID: 74f728e4-dfb9-4122-9aa6-d70cf836f1a7
       ATLAS_E2E_FIXTURE_KIND: discovery
       ATLAS_E2E_FIXTURE_STATUS: current
     steps:

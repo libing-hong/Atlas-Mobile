@@ -5,7 +5,6 @@ The HTTP sidecar uses normal password auth for GET-only corroboration; it never
 creates an application or injects a token into the app. All identities, tokens
 and UI hierarchies stay in memory. The coordinator owns fixture DB cleanup.
 """
-# SDK 57 compatibility rerun: expo .24, constants .19 and router .22.
 import argparse
 import importlib.util
 import json
@@ -31,7 +30,8 @@ CHECKS = ("context", "target", "fixture_guard", "credentials_preflight", "releas
           "android_login", "account_identity", "read_session_identity", "fixture_baseline",
           "school_plan_zh", "programme_pending_zh", "ui_add_once", "application_detail_zh",
           "pending_requirements_zh", "first_canonical_readback", "existing_selection_zh",
-          "revisit_same_application", "cold_restart_detail_zh", "cold_restart_same_application",
+          "application_list_zh", "warm_home_identity_zh", "revisit_same_application",
+          "cold_restart_next_step_zh", "cold_restart_detail_zh", "cold_restart_same_application",
           "final_sign_out", "read_session_logout_local", "emulator_session_removed")
 NOT_RUN = ("duplicate_post", "database_row_assertions", "database_fixture_cleanup",
            "positive_material_initialization", "hosted_partial_initialization", "cross_user_isolation",
@@ -120,7 +120,8 @@ class Acceptance:
         android = self.android
         android.tap("去选校")
         android.wait("我的选校方案")
-        android.locate(hosted.LABEL)
+        android.locate(hosted.SCHOOL_LABEL)
+        android.locate(hosted.PROGRAMME_LABEL)
         android.locate("你的留学档案已更新。现有方案尚未重新评估，请对照最新背景谨慎选择。")
         android.locate("本版本可查看已有方案，不会自动生成或重新搜索院校。")
 
@@ -128,7 +129,8 @@ class Acceptance:
         android = self.android
         android.tap("查看项目")
         android.wait("项目详情")
-        android.locate(hosted.LABEL)
+        android.locate(hosted.SCHOOL_LABEL)
+        android.locate(hosted.PROGRAMME_LABEL)
         android.locate("信息核验：核验未完成")
         android.locate("学费：待核验")
         android.locate("截止日期：待核验")
@@ -150,8 +152,8 @@ class Acceptance:
         # the actual successful detail response to have rendered instead.
         android = self.android
         android.wait("申请详情", timeout=75)
-        android.locate("学校信息待确认")
-        android.locate("项目名称待确认")
+        android.locate(hosted.SCHOOL_LABEL)
+        android.locate(hosted.PROGRAMME_LABEL)
         android.locate("当前阶段：规划中")
         android.locate("申请下一步")
         android.locate("进度待确认")
@@ -172,13 +174,14 @@ class Acceptance:
     def existing_selection(self):
         android = self.android
         android.tap("返回我的申请")
-        android.locate("学校信息待确认")
-        android.locate("项目名称待确认")
+        android.locate(hosted.SCHOOL_LABEL)
+        android.locate(hosted.PROGRAMME_LABEL)
         self.school_plan()
         android.locate("已加入我的申请")
         android.tap("查看项目")
         android.wait("项目详情")
-        android.locate(hosted.LABEL)
+        android.locate(hosted.SCHOOL_LABEL)
+        android.locate(hosted.PROGRAMME_LABEL)
         button = android.locate("查看申请", actionable=True)
         # Existing membership replaces Add with View in this same top panel.
         # Do not trigger a second write or use a hidden/deep-link shortcut.
@@ -188,14 +191,29 @@ class Acceptance:
         android.tap_node(button)
         self.application_detail()
 
+    def application_list(self):
+        self.android.tap("返回我的申请")
+        self.android.locate(hosted.SCHOOL_LABEL)
+        self.android.locate(hosted.PROGRAMME_LABEL)
+
+    def warm_home(self):
+        self.android.tap("首页", tab=True)
+        self.android.wait("你的下一步", timeout=75)
+        self.android.locate(hosted.SCHOOL_LABEL)
+        self.android.locate(hosted.PROGRAMME_LABEL)
+
     def cold_restart(self):
         android = self.android
-        android.tap("返回我的申请")
         android.restart()
         android.wait("你的下一步", timeout=75)
+        android.locate(hosted.SCHOOL_LABEL)
+        android.locate(hosted.PROGRAMME_LABEL)
+
+    def cold_detail(self):
+        android = self.android
         android.tap("申请", tab=True)
-        android.locate("学校信息待确认")
-        android.locate("项目名称待确认")
+        android.locate(hosted.SCHOOL_LABEL)
+        android.locate(hosted.PROGRAMME_LABEL)
         android.tap("查看申请")
         self.application_detail()
 
@@ -215,8 +233,11 @@ class Acceptance:
         self.step("pending_requirements_zh", self.requirements)
         self.step("first_canonical_readback", self.first_readback)
         self.step("existing_selection_zh", self.existing_selection)
+        self.step("application_list_zh", self.application_list)
+        self.step("warm_home_identity_zh", self.warm_home)
         self.step("revisit_same_application", self.readback.confirm)
-        self.step("cold_restart_detail_zh", self.cold_restart)
+        self.step("cold_restart_next_step_zh", self.cold_restart)
+        self.step("cold_restart_detail_zh", self.cold_detail)
         self.step("cold_restart_same_application", self.readback.confirm)
         self.android.tap("返回我的申请")
         self.step("final_sign_out", lambda: self.android.logout(email))

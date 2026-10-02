@@ -113,7 +113,7 @@ def plan(data, application_id=None):
                                        "countryCode", "degreeLevel", "officialUrl", "applicationId", "decision"))
     read.require(item["selection"] == {"kind": "discovery", "id": DISCOVERY_ID}
                  and item["selectable"] is True and item["schoolName"] == SCHOOL_LABEL and item["programName"] == PROGRAMME_LABEL
-                 and item["countryCode"] == "FR" and item["degreeLevel"] is None and item["officialUrl"] == FIXTURE_URL
+                 and item["countryCode"] == "FR" and item["degreeLevel"] == "Master" and item["officialUrl"] == FIXTURE_URL
                  and item["applicationId"] == application_id, "BASELINE_CHANGED")
     read.require(item["programId"] is None if application_id is None else read.is_uuid(item["programId"]), "CONSISTENCY")
     generation = read.shape(data["generation"], ("enabled", "profileStale", "runStatus"))

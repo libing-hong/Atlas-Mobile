@@ -25,7 +25,7 @@ def response(data):
 
 def application():
     return {"id": APP, "schoolName": script.SCHOOL_LABEL, "programName": script.PROGRAMME_LABEL, "countryCode": "FR",
-            "degreeLevel": None, "status": "planning", "submissionMode": None, "selectedForVisa": False,
+            "degreeLevel": "Master", "status": "planning", "submissionMode": None, "selectedForVisa": False,
             "materialsReady": 0, "materialsTotal": 4,
             "materials": [{"materialType": name, "status": "missing"} for name in sorted(script.MATERIAL_TYPES)],
             "catalogueVerification": {"identity": None, "legacyProgramme": None, "legacySchool": None, "admissions": None},
@@ -52,7 +52,7 @@ class FakeClient:
         if route == "recommendations":
             return response({"items": [{"selection": {"kind": "discovery", "id": script.DISCOVERY_ID},
                              "selectable": True, "programId": PROGRAM if self.posts else None,
-                             "schoolName": script.SCHOOL_LABEL, "programName": script.PROGRAMME_LABEL, "countryCode": "FR", "degreeLevel": None,
+                             "schoolName": script.SCHOOL_LABEL, "programName": script.PROGRAMME_LABEL, "countryCode": "FR", "degreeLevel": "Master",
                              "officialUrl": script.FIXTURE_URL, "applicationId": APP if self.posts else None,
                              "decision": {"recommendationUsable": False, "verification": {"programme": "pending", "admissions": "pending"}}}],
                              "generation": {"enabled": False, "profileStale": True, "runStatus": "completed"}})

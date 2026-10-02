@@ -36,7 +36,7 @@ jobs:
       - name: Read fixed Preview deployment through normal password authentication
         env:
           EXPO_PUBLIC_APP_ENV: preview
-          EXPO_PUBLIC_ATLAS_API_URL: https://atlas-os-preview-efevbscqm-libing-hongs-projects.vercel.app
+          EXPO_PUBLIC_ATLAS_API_URL: https://atlas-os-preview-ajfb1kg2o-libing-hongs-projects.vercel.app
           EXPO_PUBLIC_SUPABASE_URL: https://efvpndayardwjqtwtdmx.supabase.co
           EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_P0c1JB0dFOICwntFalOxOw_wetxrArJ
           ATLAS_PREVIEW_TEST_EMAIL: ${{ secrets.ATLAS_PREVIEW_TEST_EMAIL }}

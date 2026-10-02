@@ -18,6 +18,6 @@ export const approvedNonProductionTargets: readonly {
 }, {
   environment: 'preview',
   supabaseOrigin: 'https://efvpndayardwjqtwtdmx.supabase.co',
-  apiOrigin: 'https://atlas-os-preview-efevbscqm-libing-hongs-projects.vercel.app',
+  apiOrigin: 'https://atlas-os-preview-ajfb1kg2o-libing-hongs-projects.vercel.app',
 }];
 export const mobileBusinessApiEnabled = true;

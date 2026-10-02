@@ -20,10 +20,12 @@ spec = importlib.util.spec_from_file_location(
 read = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(read)
 
-MARKER = "atlas-native-pending-20260918-v1"
-RUN_ID = "24a7784d-f32e-49e9-b89b-0d74d2bf55ad"
-DISCOVERY_ID = "74f728e4-dfb9-4122-9aa6-d70cf836f1a6"
+MARKER = "atlas-native-pending-20260921-v2"
+RUN_ID = "24a7784d-f32e-49e9-b89b-0d74d2bf55ae"
+DISCOVERY_ID = "74f728e4-dfb9-4122-9aa6-d70cf836f1a7"
 LABEL = "ATLAS TEST ONLY " + MARKER
+SCHOOL_LABEL = LABEL + " School"
+PROGRAMME_LABEL = LABEL + " Programme"
 FIXTURE_URL = "https://atlas-native-e2e.invalid/" + MARKER + "/programme"
 MATERIAL_TYPES = {"degree_certificate", "academic_transcript", "language_score", "standardized_test_score"}
 CHECKS = ("context", "target", "fixture_guard", "password_auth", "auth_identity", "account_boundary",
@@ -44,12 +46,12 @@ def fixture_guard():
     read.require(all(os.environ.get(key) == value for key, value in expected.items()), "TARGET")
     # The raw discovery status is verified by the coordinator's DB preflight;
     # the public DTO exposes selectable, not the raw status or fixture payload.
-    read.require(read.API == "https://atlas-os-preview-efevbscqm-libing-hongs-projects.vercel.app"
+    read.require(read.API == "https://atlas-os-preview-ajfb1kg2o-libing-hongs-projects.vercel.app"
                  and read.SUPABASE == "https://efvpndayardwjqtwtdmx.supabase.co"
                  and read.REPOSITORY == "libing-hong/Atlas-Mobile"
                  and read.BRANCH == "refs/heads/feature/native-school-applications-v1"
-                 and read.BACKEND_SHA == "d7dcbb6b1ec1bea9d1f293d9fcc011c41bee1914"
-                 and read.DEPLOYMENT == "dpl_CRiG7zKcshuCL24GF7NAt8BoEZGR", "TARGET")
+                 and read.BACKEND_SHA == "50a66221d090f6d0bcc1cc64dad77f46327f6607"
+                 and read.DEPLOYMENT == "dpl_74tSHctuiZG8yw3pQ7nnWqVvPXBi", "TARGET")
 
 
 class Client(read.Client):
@@ -110,7 +112,7 @@ def plan(data, application_id=None):
     item = read.shape(data["items"][0], ("selection", "selectable", "programId", "schoolName", "programName",
                                        "countryCode", "degreeLevel", "officialUrl", "applicationId", "decision"))
     read.require(item["selection"] == {"kind": "discovery", "id": DISCOVERY_ID}
-                 and item["selectable"] is True and item["schoolName"] == LABEL and item["programName"] == LABEL
+                 and item["selectable"] is True and item["schoolName"] == SCHOOL_LABEL and item["programName"] == PROGRAMME_LABEL
                  and item["countryCode"] == "FR" and item["degreeLevel"] is None and item["officialUrl"] == FIXTURE_URL
                  and item["applicationId"] == application_id, "BASELINE_CHANGED")
     read.require(item["programId"] is None if application_id is None else read.is_uuid(item["programId"]), "CONSISTENCY")
@@ -137,6 +139,8 @@ def pending_application(value, application_id):
                        "selectedForVisa", "materialsReady", "materialsTotal", "materials", "catalogueVerification",
                        "requirements", "decision", "submittedAt", "decisionAt", "updatedAt", "action"))
     read.require(value["id"] == application_id and value["status"] == "planning"
+                 and value["schoolName"] == SCHOOL_LABEL and value["programName"] == PROGRAMME_LABEL
+                 and value["schoolName"] != value["programName"]
                  and value["submissionMode"] is None and value["selectedForVisa"] is False
                  and value["submittedAt"] is None and value["decisionAt"] is None, "CONSISTENCY")
     read.require(value["materialsReady"] == 0 and value["materialsTotal"] == 4
@@ -166,6 +170,9 @@ def detail(data, application_id):
     read.require(next_step["matter"]["id"] == application_id and next_step["matter"]["stage"] == "applications"
                  and next_step["matter"]["status"] == "blocked" and next_step["progress"] is None
                  and next_step["progressIndeterminate"] is True, "CONSISTENCY")
+    description = next_step["matter"]["description"]
+    read.require("\n院校：" + SCHOOL_LABEL in description
+                 and "\n项目：" + PROGRAMME_LABEL in description, "CONSISTENCY")
     return application
 
 

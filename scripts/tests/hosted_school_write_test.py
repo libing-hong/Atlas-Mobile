@@ -24,7 +24,7 @@ def response(data):
 
 
 def application():
-    return {"id": APP, "schoolName": "学校信息待确认", "programName": "项目名称待确认", "countryCode": "—",
+    return {"id": APP, "schoolName": script.SCHOOL_LABEL, "programName": script.PROGRAMME_LABEL, "countryCode": "FR",
             "degreeLevel": None, "status": "planning", "submissionMode": None, "selectedForVisa": False,
             "materialsReady": 0, "materialsTotal": 4,
             "materials": [{"materialType": name, "status": "missing"} for name in sorted(script.MATERIAL_TYPES)],
@@ -52,7 +52,7 @@ class FakeClient:
         if route == "recommendations":
             return response({"items": [{"selection": {"kind": "discovery", "id": script.DISCOVERY_ID},
                              "selectable": True, "programId": PROGRAM if self.posts else None,
-                             "schoolName": script.LABEL, "programName": script.LABEL, "countryCode": "FR", "degreeLevel": None,
+                             "schoolName": script.SCHOOL_LABEL, "programName": script.PROGRAMME_LABEL, "countryCode": "FR", "degreeLevel": None,
                              "officialUrl": script.FIXTURE_URL, "applicationId": APP if self.posts else None,
                              "decision": {"recommendationUsable": False, "verification": {"programme": "pending", "admissions": "pending"}}}],
                              "generation": {"enabled": False, "profileStale": True, "runStatus": "completed"}})
@@ -69,7 +69,8 @@ class FakeClient:
             return response({"items": [item] if self.posts else []})
         if route == "fixture_detail":
             return response({"application": item, "decision": {"recommendationUsable": False},
-                             "nextStep": {"matter": {"id": APP, "stage": "applications", "title": "pending", "description": "pending",
+                             "nextStep": {"matter": {"id": APP, "stage": "applications", "title": "pending",
+                                           "description": "pending\n院校：" + script.SCHOOL_LABEL + "\n项目：" + script.PROGRAMME_LABEL,
                                            "status": "blocked", "dueAt": None, "dependencyTaskIds": [],
                                            "action": {"enabled": True, "kind": "OPEN_APPLICATION", "resourceId": APP}},
                                           "label": "pending", "displayStatus": "pending", "progress": None, "progressIndeterminate": True}})

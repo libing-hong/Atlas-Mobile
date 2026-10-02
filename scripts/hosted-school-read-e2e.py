@@ -20,11 +20,11 @@ from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_ope
 
 REPOSITORY = "libing-hong/Atlas-Mobile"
 BRANCH = "refs/heads/feature/native-school-applications-v1"
-API = "https://atlas-os-preview-efevbscqm-libing-hongs-projects.vercel.app"
+API = "https://atlas-os-preview-ajfb1kg2o-libing-hongs-projects.vercel.app"
 SUPABASE = "https://efvpndayardwjqtwtdmx.supabase.co"
 PUBLIC_KEY = "sb_publishable_P0c1JB0dFOICwntFalOxOw_wetxrArJ"
-BACKEND_SHA = "d7dcbb6b1ec1bea9d1f293d9fcc011c41bee1914"
-DEPLOYMENT = "dpl_CRiG7zKcshuCL24GF7NAt8BoEZGR"
+BACKEND_SHA = "50a66221d090f6d0bcc1cc64dad77f46327f6607"
+DEPLOYMENT = "dpl_74tSHctuiZG8yw3pQ7nnWqVvPXBi"
 SECRET_NAMES = ("ATLAS_PREVIEW_TEST_EMAIL", "ATLAS_PREVIEW_TEST_PASSWORD")
 RESOURCES = ("me", "profile", "recommendations", "applications", "journey", "current-matters")
 CHECKS = ("context", "target",) + tuple(
